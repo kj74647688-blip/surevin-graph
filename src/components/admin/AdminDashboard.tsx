@@ -459,7 +459,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Tab: Class & Subject Management */}
       {activeTab === 'class-subjects' && (
-        <ClassSubjectManagement onUpdate={reloadData} />
+        <ClassSubjectManagement onDataChanged={reloadData} />
       )}
 
       {/* Tab: Teacher Graph Projects Across School */}

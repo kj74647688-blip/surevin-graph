@@ -365,6 +365,12 @@ export const StorageService = {
     localStorage.setItem(STORAGE_KEYS.TEACHERS, JSON.stringify(teachers));
   },
 
+  addTeacher(teacher: Teacher): void {
+    const teachers = this.getTeachers();
+    teachers.unshift(teacher);
+    this.saveTeachers(teachers);
+  },
+
   updateTeacherProfile(teacherIdOrId: string, updates: Partial<Teacher>): Teacher | null {
     const teachers = this.getTeachers();
     const idx = teachers.findIndex((t) => t.id === teacherIdOrId || t.teacherId === teacherIdOrId);
@@ -577,7 +583,7 @@ export const StorageService = {
         }
 
         return {
-          subject,
+          subject: sub,
           obtained,
           percentage: pct,
           isAbsent,
@@ -637,7 +643,8 @@ export const StorageService = {
     return JSON.stringify(data, null, 2);
   },
 
-  cleanupDemoData(): void {
+  cleanupDemoData() {
+    const preview = this.previewDemoData();
     const students = this.getStudents().filter((s) => !(s.id.startsWith('stu-') || s.name === 'Kartik' || s.name === 'Ananya'));
     const marks = this.getMarks().filter((m) => !m.id.startsWith('marks-seed-'));
     const projects = this.getGraphProjects().filter((p) => !p.id.startsWith('proj-seed-'));
@@ -657,6 +664,13 @@ export const StorageService = {
       action: 'CLEANUP_DEMO_DATA',
       details: 'Cleaned up demo students, placeholder marks, and sample graph projects for production readiness.',
     });
+
+    return {
+      purgedStudents: preview.demoStudentsCount,
+      purgedTeachers: preview.demoTeachersCount,
+      purgedMarks: preview.demoMarksCount,
+      purgedProjects: preview.demoProjectsCount,
+    };
   },
 
   resetToDefaultData(): void {

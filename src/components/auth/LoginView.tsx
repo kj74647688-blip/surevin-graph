@@ -19,9 +19,9 @@ export const LoginView: React.FC = () => {
   const handleCustomGoogleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    const res = loginWithGoogle(emailInput);
-    if (!res.success) {
-      setErrorMsg(res.message || 'Email not recognized. Please sign up or use a valid teacher email.');
+    const success = loginWithGoogle(emailInput);
+    if (!success) {
+      setErrorMsg('Email not recognized. Please sign up or use a valid teacher email.');
     } else {
       setShowGoogleModal(false);
     }

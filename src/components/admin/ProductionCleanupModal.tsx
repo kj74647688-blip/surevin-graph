@@ -128,25 +128,25 @@ export const ProductionCleanupModal: React.FC<ProductionCleanupModalProps> = ({
                     <span className="flex items-center gap-1.5 text-slate-600">
                       <GraduationCap className="w-3.5 h-3.5 text-slate-400" /> Demo Students:
                     </span>
-                    <span className="font-mono font-bold text-rose-600">{demoCounts.demoStudents}</span>
+                    <span className="font-mono font-bold text-rose-600">{demoCounts.demoStudentsCount}</span>
                   </div>
                   <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200">
                     <span className="flex items-center gap-1.5 text-slate-600">
                       <Users className="w-3.5 h-3.5 text-slate-400" /> Demo Teachers:
                     </span>
-                    <span className="font-mono font-bold text-rose-600">{demoCounts.demoTeachers}</span>
+                    <span className="font-mono font-bold text-rose-600">{demoCounts.demoTeachersCount}</span>
                   </div>
                   <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200">
                     <span className="flex items-center gap-1.5 text-slate-600">
                       <FileSpreadsheet className="w-3.5 h-3.5 text-slate-400" /> Demo Marks:
                     </span>
-                    <span className="font-mono font-bold text-rose-600">{demoCounts.demoMarks}</span>
+                    <span className="font-mono font-bold text-rose-600">{demoCounts.demoMarksCount}</span>
                   </div>
                   <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200">
                     <span className="flex items-center gap-1.5 text-slate-600">
                       <FileSpreadsheet className="w-3.5 h-3.5 text-slate-400" /> Test Projects:
                     </span>
-                    <span className="font-mono font-bold text-rose-600">{demoCounts.demoProjects}</span>
+                    <span className="font-mono font-bold text-rose-600">{demoCounts.demoProjectsCount}</span>
                   </div>
                 </div>
               </div>

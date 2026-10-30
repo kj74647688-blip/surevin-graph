@@ -177,7 +177,8 @@ export interface AuditLog {
     | 'UPDATE_PROFILE'
     | 'UPDATE_SCHOOL_SETTINGS'
     | 'MANAGE_CLASS_SUBJECTS'
-    | 'CLEANUP_DEMO_DATA';
+    | 'CLEANUP_DEMO_DATA'
+    | 'TEACHER_SELF_SIGNUP';
   details: string;
   metadata?: Record<string, any>;
 }

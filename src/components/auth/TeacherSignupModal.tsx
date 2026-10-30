@@ -50,7 +50,9 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
     const assignedSubjects = subList.map((s, idx) => ({
       id: `sub-${idx}-${Date.now()}`,
       name: s,
+      code: `${s.substring(0, 3).toUpperCase()}-0${idx + 1}`,
       maxMarks: 80,
+      passingMarks: 32,
     }));
 
     const newTeacher: Teacher = {
@@ -70,6 +72,7 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
         canExportReports: true,
         canAddStudents: true,
       },
+      createdAt: new Date().toISOString(),
     };
 
     StorageService.addTeacher(newTeacher);

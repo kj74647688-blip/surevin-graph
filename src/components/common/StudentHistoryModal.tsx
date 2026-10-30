@@ -45,23 +45,21 @@ export const StudentHistoryModal: React.FC<StudentHistoryModalProps> = ({
       let subjectsEvaluated = 0;
 
       const subjectDetails = ex.subjects.map((sub) => {
-        const val = markRec?.subjectMarks?.[sub.id] || markRec?.subjectMarks?.[sub.name] || '';
-        const isAbsent = /^[Aa]b?(sent)?$/i.test(val);
-        const num = parseFloat(val);
-        const isInvalid = !isAbsent && (isNaN(num) || num < 0 || num > sub.maxMarks);
-        const marksObtained = !isAbsent && !isInvalid && !isNaN(num) ? num : null;
-        const percentage = marksObtained !== null && sub.maxMarks > 0 
-          ? Math.round((marksObtained / sub.maxMarks) * 1000) / 10 
+        const entry = markRec?.marks?.[sub.id];
+        const isAbsent = !!entry?.isAbsent;
+        const obtained = entry?.obtained ?? null;
+        const percentage = obtained !== null && sub.maxMarks > 0 
+          ? Math.round((obtained / sub.maxMarks) * 1000) / 10 
           : null;
 
         if (percentage !== null) {
-          totalObtained += marksObtained!;
+          totalObtained += obtained!;
           totalMax += sub.maxMarks;
           subjectsEvaluated++;
         }
 
         let bandColor = 'bg-slate-100 text-slate-700 border-slate-200';
-        let bandLabel = isAbsent ? 'Absent' : isInvalid ? 'Invalid' : 'Pending';
+        let bandLabel = isAbsent ? 'Absent' : 'Pending';
 
         if (percentage !== null) {
           if (percentage > 80) {
@@ -82,9 +80,9 @@ export const StudentHistoryModal: React.FC<StudentHistoryModalProps> = ({
         return {
           subjectName: sub.name,
           maxMarks: sub.maxMarks,
-          marksObtained,
+          marksObtained: obtained,
           percentage,
-          displayValue: isAbsent ? 'ABS' : marksObtained !== null ? `${marksObtained}` : '—',
+          displayValue: isAbsent ? 'ABS' : obtained !== null ? `${obtained}` : '—',
           bandColor,
           bandLabel,
         };
@@ -95,7 +93,7 @@ export const StudentHistoryModal: React.FC<StudentHistoryModalProps> = ({
         : null;
 
       return {
-        exam,
+        exam: ex,
         markRec,
         hasRecord: !!markRec,
         totalObtained,
@@ -157,11 +155,38 @@ export const StudentHistoryModal: React.FC<StudentHistoryModalProps> = ({
   }, [historyItems]);
 
   const handleDownloadReport = () => {
-    // Export single student complete report card for the latest exam
     const activeExam = exams[0];
     const markRec = allMarks.find((m) => m.examId === activeExam?.id);
     if (activeExam) {
-      ExportService.exportStudentReportCardPDF(student, activeExam, markRec);
+      const performances = activeExam.subjects.map((sub) => {
+        const entry = markRec?.marks?.[sub.id];
+        const obtained = entry?.obtained ?? null;
+        const pct = obtained !== null && sub.maxMarks > 0 ? Math.round((obtained / sub.maxMarks) * 1000) / 10 : null;
+        let band: 'RED' | 'ORANGE' | 'YELLOW' | 'GREEN' | 'GREY' = 'GREY';
+        let bandLabel = 'Pending';
+        if (entry?.isAbsent) {
+          band = 'GREY';
+          bandLabel = 'Absent';
+        } else if (pct !== null) {
+          if (pct > 80) { band = 'GREEN'; bandLabel = 'Above 80%'; }
+          else if (pct >= 60) { band = 'YELLOW'; bandLabel = '60%–80%'; }
+          else if (pct >= 40) { band = 'ORANGE'; bandLabel = '40%–<60%'; }
+          else { band = 'RED'; bandLabel = 'Below 40%'; }
+        }
+        return {
+          subjectId: sub.id,
+          subjectName: sub.name,
+          subjectCode: sub.code,
+          maxMarks: sub.maxMarks,
+          obtained,
+          percentage: pct,
+          band,
+          bandLabel,
+          isAbsent: !!entry?.isAbsent,
+          isUnverified: obtained === null && !entry?.isAbsent,
+        };
+      });
+      ExportService.exportIndividualStudentPDF(student, activeExam, performances, teacher || undefined);
     }
   };
 
