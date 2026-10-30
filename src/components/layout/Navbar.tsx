@@ -13,20 +13,22 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Brand */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-extrabold text-sm shadow-xs">
-              SF
-            </div>
+            <img
+              src="/assets/aistudio/surevin_babe9959.jpg"
+              alt="Surevin International Residential School"
+              className="w-10 h-10 object-contain shrink-0"
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-base font-extrabold text-slate-900 tracking-tight">
-                  ScoreFuture
+                  Surevin International School
                 </span>
-                <span className="text-3xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase font-mono">
+                <span className="text-3xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 uppercase font-mono">
                   {user.role}
                 </span>
               </div>
-              <div className="text-3xs text-slate-400 font-medium hidden sm:block">
-                Academic Information & Analytics System
+              <div className="text-3xs text-slate-500 font-medium hidden sm:block">
+                ScoreFuture Academic Analytics & Performance Engine
               </div>
             </div>
           </div>

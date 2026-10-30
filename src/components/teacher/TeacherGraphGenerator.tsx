@@ -85,6 +85,7 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Live Data Validation Summary calculation
   const validationSummary = useMemo<SpreadsheetValidationSummary>(() => {
@@ -311,21 +312,28 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
     setCurrentView('generator');
   };
 
-  const handleDownloadCombinedPDF = (finalExamName: string, finalSession: string) => {
-    ExportService.exportCombinedSubjectGraphsPDF(
-      {
-        schoolName: schoolSettings.schoolName,
-        examName: finalExamName,
-        academicSession: finalSession,
-        className: currentTeacher.assignedClass,
-        sectionName: currentTeacher.assignedSection,
-        teacherName: currentTeacher.name,
-        teacherId: currentTeacher.teacherId,
-        teacherDesignation: currentTeacher.designation,
-      },
-      subjects,
-      subjectGraphDataMap
-    );
+  const handleDownloadCombinedPDF = async (finalExamName: string, finalSession: string) => {
+    try {
+      setIsGeneratingPdf(true);
+      await ExportService.exportCombinedSubjectGraphsPDF(
+        {
+          schoolName: schoolSettings.schoolName,
+          examName: finalExamName,
+          academicSession: finalSession,
+          className: currentTeacher.assignedClass,
+          sectionName: currentTeacher.assignedSection,
+          teacherName: currentTeacher.name,
+          teacherId: currentTeacher.teacherId,
+          teacherDesignation: currentTeacher.designation,
+        },
+        subjects,
+        subjectGraphDataMap
+      );
+    } catch (err) {
+      console.error('Failed to generate combined PDF:', err);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   if (currentView === 'history') {
@@ -347,17 +355,26 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
         <div className="absolute right-0 top-0 -mt-10 -mr-10 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-2xs font-bold tracking-wide uppercase text-blue-200 border border-white/10 mb-2">
-              <Sparkles className="w-3 h-3 text-amber-300" />
-              <span>ScoreFuture Academic Module</span>
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-white/10 p-2 border border-white/20 backdrop-blur-xs shrink-0 hidden sm:flex items-center justify-center">
+              <img
+                src="/assets/aistudio/surevin_babe9959.jpg"
+                alt="Surevin Crest"
+                className="w-full h-full object-contain"
+              />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              MY GRAPH GENERATOR
-            </h1>
-            <p className="text-xs sm:text-sm text-blue-100 mt-1 max-w-2xl font-medium">
-              Enter marks in an Excel-style sheet, upload Excel files, and automatically generate subject-wise student performance graphs.
-            </p>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-2xs font-bold tracking-wide uppercase text-blue-200 border border-white/10 mb-2">
+                <Sparkles className="w-3 h-3 text-amber-300" />
+                <span>Surevin International Residential School · Niwari Modinagar</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                MY GRAPH GENERATOR
+              </h1>
+              <p className="text-xs sm:text-sm text-blue-100 mt-1 max-w-2xl font-medium">
+                Enter marks in an Excel-style sheet, upload Excel files, and automatically generate subject-wise student performance graphs.
+              </p>
+            </div>
           </div>
 
           {/* Header Action Buttons (Matching Prompt Section 1) */}

@@ -22,10 +22,10 @@ const STORAGE_KEYS = {
 };
 
 const initialSchoolSettings: SchoolSettings = {
-  schoolName: 'ScoreFuture Model Senior Secondary Academy',
+  schoolName: 'Surevin International Residential School, Niwari Modinagar',
   academicSession: '2025-2026',
-  affiliationNumber: 'CBSE-AFF-2130849',
-  address: 'Sector 14, Institutional Area, New Delhi - 110001',
+  affiliationNumber: 'CBSE Affiliation No. 2130849',
+  address: 'Niwari Road, Modinagar, Ghaziabad, Delhi-NCR',
   principalName: 'Dr. Alok Verma',
 };
 
@@ -248,7 +248,7 @@ function generateInitialGraphProject(): GraphGenerationRecord {
     section: 'Platinum',
     examinationName: 'Mid-Term Examination 2026',
     academicSession: '2025-2026',
-    schoolName: 'ScoreFuture Model Senior Secondary Academy',
+    schoolName: 'Surevin International Residential School, Niwari Modinagar',
     createdAt: '2026-09-30T10:00:00Z',
     updatedAt: '2026-09-30T14:30:00Z',
     status: 'published',
@@ -277,7 +277,7 @@ const initialLogs: AuditLog[] = [
 export const StorageService = {
   getSchoolSettings(): SchoolSettings {
     const raw = localStorage.getItem(STORAGE_KEYS.SCHOOL_SETTINGS);
-    if (!raw) {
+    if (!raw || raw.includes('ScoreFuture Model')) {
       localStorage.setItem(STORAGE_KEYS.SCHOOL_SETTINGS, JSON.stringify(initialSchoolSettings));
       return initialSchoolSettings;
     }

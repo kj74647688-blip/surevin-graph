@@ -33,14 +33,18 @@ export const LoginView: React.FC = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
         {/* Brand Crest */}
-        <div className="w-16 h-16 rounded-2xl bg-indigo-600 mx-auto flex items-center justify-center shadow-lg shadow-indigo-600/30 text-white font-extrabold text-2xl tracking-tighter mb-4 border border-indigo-400/30">
-          SF
+        <div className="w-20 h-20 rounded-2xl bg-white/10 p-2 mx-auto flex items-center justify-center shadow-xl shadow-blue-900/40 mb-3 border border-white/20 backdrop-blur-xs">
+          <img
+            src="/assets/aistudio/surevin_babe9959.jpg"
+            alt="Surevin International Residential School Crest"
+            className="w-full h-full object-contain"
+          />
         </div>
-        <h1 className="text-2xl font-extrabold text-white tracking-tight sm:text-3xl">
-          ScoreFuture
+        <h1 className="text-xl font-extrabold text-white tracking-tight sm:text-2xl">
+          Surevin International Residential School
         </h1>
-        <p className="mt-1 text-xs text-indigo-300 font-medium tracking-wide uppercase">
-          Academic Analytics & Record System
+        <p className="mt-1 text-xs text-blue-200 font-semibold tracking-wide uppercase">
+          Niwari Modinagar · ScoreFuture Academic System
         </p>
       </div>
 

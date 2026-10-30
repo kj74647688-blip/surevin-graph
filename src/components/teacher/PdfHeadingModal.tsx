@@ -62,13 +62,20 @@ export const PdfHeadingModal: React.FC<PdfHeadingModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Institutional Information Pill Box (From Settings & Profile) */}
           <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
-            <div className="flex items-center gap-2 text-slate-700 font-bold">
-              <Building2 className="w-4 h-4 text-blue-600" />
-              <span>{schoolSettings.schoolName}</span>
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/assets/aistudio/surevin_babe9959.jpg"
+                alt="Surevin"
+                className="w-8 h-8 object-contain shrink-0"
+              />
+              <div>
+                <div className="text-slate-800 font-bold leading-tight">{schoolSettings.schoolName}</div>
+                <div className="text-3xs text-slate-500 font-medium">Niwari Road, Modinagar · Affiliated to CBSE, New Delhi</div>
+              </div>
             </div>
-            <div className="text-2xs text-slate-500 flex items-center gap-2">
-              <User className="w-3.5 h-3.5 text-slate-400" />
-              <span>Teacher: <strong>{teacher.name}</strong> ({teacher.teacherId}) · Class {teacher.assignedClass} – {teacher.assignedSection}</span>
+            <div className="text-2xs text-slate-600 pt-1 border-t border-slate-200/80 flex items-center justify-between">
+              <span>Teacher: <strong>{teacher.name}</strong> ({teacher.teacherId})</span>
+              <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Class {teacher.assignedClass} – {teacher.assignedSection}</span>
             </div>
           </div>
 
@@ -100,8 +107,38 @@ export const PdfHeadingModal: React.FC<PdfHeadingModalProps> = ({
             />
           </div>
 
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-800">
-            <strong>Combined Landscape PDF:</strong> Every subject graph will be generated on a separate page with official header, percentage bars, student names, and performance legend.
+          {/* Visual PDF Structure Preview */}
+          <div className="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl text-xs space-y-2">
+            <div className="flex items-center gap-2 text-blue-900 font-bold text-2xs uppercase tracking-wide">
+              <span>PDF Structure & Formatting:</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-2xs">
+              <div className="p-2 bg-white rounded-lg border border-blue-100 flex items-center gap-2">
+                <img
+                  src="/assets/aistudio/surevin1_c205ba01.jpg"
+                  alt="School Photo"
+                  className="w-10 h-10 object-cover rounded border border-slate-200 shrink-0"
+                />
+                <div>
+                  <strong className="block text-slate-800">Page 1: Heading Page</strong>
+                  <span className="text-slate-500">Includes school photo & institutional profile</span>
+                </div>
+              </div>
+              <div className="p-2 bg-white rounded-lg border border-blue-100 flex items-center gap-2">
+                <img
+                  src="/assets/aistudio/surevin_babe9959.jpg"
+                  alt="Logo"
+                  className="w-9 h-9 object-contain shrink-0"
+                />
+                <div>
+                  <strong className="block text-slate-800">All Pages: Both Corners</strong>
+                  <span className="text-slate-500">Surevin logo in left & right top corners</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-3xs text-blue-700 leading-relaxed font-medium">
+              Each graph contains up to 10 students with wide, prominent bars sorted in decreasing percentage order (highest on left, lowest on right) and official 5-tier performance color bands.
+            </p>
           </div>
 
           <div className="pt-2 flex items-center justify-end gap-3">
