@@ -12,8 +12,11 @@ import { calculateSubjectPerformance } from '../../utils/constants';
 import { TeacherProfileView } from './TeacherProfileView';
 import { CreateTeacherModal } from './CreateTeacherModal';
 import { ExamConfigModal } from './ExamConfigModal';
+import { ClassSubjectManagement } from './ClassSubjectManagement';
+import { ProductionCleanupModal } from './ProductionCleanupModal';
 import { StudentSubjectGraph } from '../graphs/StudentSubjectGraph';
 import { StudentReportCardModal } from '../reports/StudentReportCardModal';
+import { StudentHistoryModal } from '../common/StudentHistoryModal';
 import { TeacherGraphHistory } from '../teacher/TeacherGraphHistory';
 import { SchoolSettingsModal } from './SchoolSettingsModal';
 import {
@@ -34,7 +37,9 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  Settings
+  Settings,
+  Trash2,
+  Layers
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -46,7 +51,7 @@ export const AdminDashboard: React.FC = () => {
 
   // Navigation
   const [selectedTeacherForProfile, setSelectedTeacherForProfile] = useState<Teacher | null>(null);
-  const [activeTab, setActiveTab] = useState<'teachers' | 'teacher-graph-projects' | 'students' | 'school-graphs' | 'exams' | 'reports' | 'logs'>('teachers');
+  const [activeTab, setActiveTab] = useState<'teachers' | 'class-subjects' | 'teacher-graph-projects' | 'students' | 'school-graphs' | 'exams' | 'reports' | 'logs'>('teachers');
 
   // Search & Filters
   const [teacherSearch, setTeacherSearch] = useState('');
@@ -58,8 +63,10 @@ export const AdminDashboard: React.FC = () => {
   const [isCreateTeacherOpen, setIsCreateTeacherOpen] = useState(false);
   const [isExamModalOpen, setIsExamModalOpen] = useState(false);
   const [isSchoolSettingsOpen, setIsSchoolSettingsOpen] = useState(false);
+  const [isCleanupModalOpen, setIsCleanupModalOpen] = useState(false);
   const [examToEdit, setExamToEdit] = useState<Examination | null>(null);
   const [previewStudent, setPreviewStudent] = useState<StudentRecord | null>(null);
+  const [selectedHistoryStudent, setSelectedHistoryStudent] = useState<StudentRecord | null>(null);
 
   const reloadData = () => {
     setTeachers(StorageService.getTeachers());
@@ -176,6 +183,14 @@ export const AdminDashboard: React.FC = () => {
             </button>
             <button
               type="button"
+              onClick={() => setActiveTab('class-subjects')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-800 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl transition-all shadow-2xs cursor-pointer"
+            >
+              <Layers className="w-4 h-4 text-indigo-600" />
+              <span>Class & Subject Management</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setIsSchoolSettingsOpen(true)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-800 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl transition-all shadow-2xs cursor-pointer"
             >
@@ -192,6 +207,15 @@ export const AdminDashboard: React.FC = () => {
             >
               <BookOpen className="w-4 h-4 text-slate-600" />
               <span>Configure Exams</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCleanupModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all shadow-2xs cursor-pointer"
+              title="Clean old demo/sample data to start genuine production use"
+            >
+              <Trash2 className="w-4 h-4 text-rose-600" />
+              <span>Clean Production Data</span>
             </button>
           </div>
         </div>
@@ -244,6 +268,17 @@ export const AdminDashboard: React.FC = () => {
           }`}
         >
           Teachers Directory & Assigned Classes ({teachers.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('class-subjects')}
+          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer shrink-0 ${
+            activeTab === 'class-subjects'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Class & Subject Management
         </button>
         <button
           type="button"
@@ -422,6 +457,11 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Tab: Class & Subject Management */}
+      {activeTab === 'class-subjects' && (
+        <ClassSubjectManagement onUpdate={reloadData} />
+      )}
+
       {/* Tab: Teacher Graph Projects Across School */}
       {activeTab === 'teacher-graph-projects' && (
         <TeacherGraphHistory
@@ -496,6 +536,15 @@ export const AdminDashboard: React.FC = () => {
                     <td className="py-3 px-3 text-center font-mono text-slate-600">{s.academicSession}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedHistoryStudent(s)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg cursor-pointer"
+                          title="View student examination history and academic progress across all exams"
+                        >
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          <span>History</span>
+                        </button>
                         <button
                           type="button"
                           onClick={() => setPreviewStudent(s)}
@@ -835,6 +884,22 @@ export const AdminDashboard: React.FC = () => {
           marksRecord={marksList.find(
             (m) => m.studentId === previewStudent.id && m.examId === currentExam.id
           )}
+        />
+      )}
+
+      {selectedHistoryStudent && (
+        <StudentHistoryModal
+          isOpen={!!selectedHistoryStudent}
+          onClose={() => setSelectedHistoryStudent(null)}
+          student={selectedHistoryStudent}
+        />
+      )}
+
+      {isCleanupModalOpen && (
+        <ProductionCleanupModal
+          isOpen={isCleanupModalOpen}
+          onClose={() => setIsCleanupModalOpen(false)}
+          onSuccess={reloadData}
         />
       )}
     </div>

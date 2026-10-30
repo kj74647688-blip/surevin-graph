@@ -7,7 +7,9 @@ import {
   SchoolSettings,
   GraphGenerationRecord,
   SpreadsheetSubject,
-  SpreadsheetRow
+  SpreadsheetRow,
+  ClassConfig,
+  Subject
 } from '../types';
 
 const STORAGE_KEYS = {
@@ -19,6 +21,7 @@ const STORAGE_KEYS = {
   CURRENT_USER: 'scorefuture_auth_user_v2',
   GRAPH_PROJECTS: 'scorefuture_graph_projects_v2',
   SCHOOL_SETTINGS: 'scorefuture_school_settings_v2',
+  CLASS_CONFIGS: 'scorefuture_class_configs_v2',
 };
 
 const initialSchoolSettings: SchoolSettings = {
@@ -29,6 +32,65 @@ const initialSchoolSettings: SchoolSettings = {
   principalName: 'Dr. Alok Verma',
 };
 
+// Flexible Class-Wise Subject Configurations (Admin Managed)
+export const initialClassConfigs: ClassConfig[] = [
+  {
+    id: 'class-vi',
+    name: 'VI',
+    sections: ['Gold', 'Silver', 'Bronze'],
+    academicSession: '2026-2027',
+    subjects: [
+      { id: 'sub-vi-eng', name: 'English', code: 'ENG-06', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-vi-hnd', name: 'Hindi', code: 'HND-06', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-vi-mth', name: 'Mathematics', code: 'MTH-06', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-vi-sci', name: 'Science', code: 'SCI-06', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-vi-sst', name: 'Social Studies', code: 'SST-06', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-vi-gk', name: 'General Knowledge', code: 'GK-06', maxMarks: 50, passingMarks: 20 },
+      { id: 'sub-vi-cmp', name: 'Computer', code: 'CMP-06', maxMarks: 50, passingMarks: 20 },
+    ],
+  },
+  {
+    id: 'class-x',
+    name: 'X',
+    sections: ['Platinum', 'Gold', 'Silver'],
+    academicSession: '2026-2027',
+    subjects: [
+      { id: 'sub-x-hnd', name: 'Hindi', code: 'HND-10', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-x-eng', name: 'English', code: 'ENG-10', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-x-mth', name: 'Mathematics', code: 'MTH-10', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-x-sci', name: 'Science', code: 'SCI-10', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-x-sst', name: 'Social Science', code: 'SST-10', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-x-it', name: 'Information Tech', code: 'IT-10', maxMarks: 50, passingMarks: 20 },
+    ],
+  },
+  {
+    id: 'class-xii-pcm',
+    name: 'XII — PCM',
+    sections: ['Science A', 'Science B'],
+    academicSession: '2026-2027',
+    subjects: [
+      { id: 'sub-xii-phy', name: 'Physics', code: 'PHY-12', maxMarks: 70, passingMarks: 23 },
+      { id: 'sub-xii-chm', name: 'Chemistry', code: 'CHM-12', maxMarks: 70, passingMarks: 23 },
+      { id: 'sub-xii-mth', name: 'Mathematics', code: 'MTH-12', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-xii-eng', name: 'English', code: 'ENG-12', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-xii-ped', name: 'Physical Education', code: 'PED-12', maxMarks: 70, passingMarks: 23 },
+    ],
+  },
+  {
+    id: 'class-xii-pcb',
+    name: 'XII — PCB',
+    sections: ['Science C'],
+    academicSession: '2026-2027',
+    subjects: [
+      { id: 'sub-xii-phy-b', name: 'Physics', code: 'PHY-12', maxMarks: 70, passingMarks: 23 },
+      { id: 'sub-xii-chm-b', name: 'Chemistry', code: 'CHM-12', maxMarks: 70, passingMarks: 23 },
+      { id: 'sub-xii-bio', name: 'Biology', code: 'BIO-12', maxMarks: 70, passingMarks: 23 },
+      { id: 'sub-xii-eng-b', name: 'English', code: 'ENG-12', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-xii-ped-b', name: 'Physical Education', code: 'PED-12', maxMarks: 70, passingMarks: 23 },
+    ],
+  },
+];
+
 // Initial Seed Data
 const initialTeachers: Teacher[] = [
   {
@@ -36,11 +98,13 @@ const initialTeachers: Teacher[] = [
     teacherId: 'SF-TEA-J8M4Q6',
     name: 'Jyoti Panchal',
     email: 'jyoti.panchal@scorefuture.edu',
-    designation: 'Senior Secondary Teacher (Mathematics & Science)',
+    designation: 'Senior Faculty (Mathematics & Science)',
     phone: '+91 98765 43210',
-    assignedClass: 'X',
-    assignedSection: 'Platinum',
-    department: 'Mathematics & Science',
+    assignedClass: 'VI',
+    assignedSection: 'Gold',
+    academicSession: '2026-2027',
+    assignedSubjectIds: ['sub-vi-eng', 'sub-vi-hnd', 'sub-vi-mth', 'sub-vi-sci', 'sub-vi-gk', 'sub-vi-cmp'],
+    department: 'Secondary Sciences',
     active: true,
     permissions: {
       canEditMarks: true,
@@ -439,6 +503,162 @@ export const StorageService = {
     this.saveGraphProjects(updated);
   },
 
+  // Class & Subject Management (Admin Configured)
+  getClassConfigs(): ClassConfig[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.CLASS_CONFIGS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.CLASS_CONFIGS, JSON.stringify(initialClassConfigs));
+      return initialClassConfigs;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return initialClassConfigs;
+    }
+  },
+
+  saveClassConfigs(configs: ClassConfig[]): void {
+    localStorage.setItem(STORAGE_KEYS.CLASS_CONFIGS, JSON.stringify(configs));
+  },
+
+  getClassConfig(className: string): ClassConfig | undefined {
+    const configs = this.getClassConfigs();
+    const clean = className.trim().toLowerCase();
+    return configs.find((c) => c.name.toLowerCase() === clean || c.name.toLowerCase().startsWith(clean));
+  },
+
+  /**
+   * Automatically resolves assigned subjects with specific maxMarks for a teacher
+   */
+  getTeacherAssignedSubjects(teacher: Teacher): Subject[] {
+    const config = this.getClassConfig(teacher.assignedClass);
+    if (config && config.subjects && config.subjects.length > 0) {
+      if (teacher.assignedSubjectIds && teacher.assignedSubjectIds.length > 0) {
+        const filtered = config.subjects.filter((s) => teacher.assignedSubjectIds?.includes(s.id));
+        if (filtered.length > 0) return filtered;
+      }
+      return config.subjects;
+    }
+    if (teacher.assignedSubjects && teacher.assignedSubjects.length > 0) {
+      return teacher.assignedSubjects;
+    }
+    // Fallback standard subjects
+    return [
+      { id: 'sub-eng', name: 'English', code: 'ENG', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-hnd', name: 'Hindi', code: 'HND', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-mth', name: 'Mathematics', code: 'MTH', maxMarks: 80, passingMarks: 32 },
+      { id: 'sub-sci', name: 'Science', code: 'SCI', maxMarks: 80, passingMarks: 32 },
+    ];
+  },
+
+  /**
+   * Aggregates student exam history across all examinations for student record profile
+   */
+  getStudentExamHistory(studentId: string) {
+    const exams = this.getExams();
+    const marks = this.getMarks().filter((m) => m.studentId === studentId);
+    
+    return exams.map((exam) => {
+      const markRecord = marks.find((m) => m.examId === exam.id);
+      let totalObt = 0;
+      let totalMax = 0;
+      let hasMarks = false;
+
+      const subjectBreakdown = exam.subjects.map((sub) => {
+        const entry = markRecord?.marks?.[sub.id];
+        const isAbsent = !!entry?.isAbsent;
+        const obtained = entry?.obtained ?? null;
+        const pct = obtained !== null && sub.maxMarks > 0 ? Math.round((obtained / sub.maxMarks) * 1000) / 10 : null;
+
+        if (obtained !== null && !isAbsent) {
+          totalObt += obtained;
+          totalMax += sub.maxMarks;
+          hasMarks = true;
+        }
+
+        return {
+          subject,
+          obtained,
+          percentage: pct,
+          isAbsent,
+        };
+      });
+
+      const overallPercentage = totalMax > 0 && hasMarks ? Math.round((totalObt / totalMax) * 1000) / 10 : null;
+
+      return {
+        exam,
+        hasRecord: !!markRecord,
+        overallPercentage,
+        totalObtained: totalObt,
+        totalMaxMarks: totalMax,
+        subjectBreakdown,
+        updatedAt: markRecord?.updatedAt,
+      };
+    }).filter((h) => h.hasRecord);
+  },
+
+  // Production Data Cleanup: Preview & Purge demo seed records
+  previewDemoData() {
+    const students = this.getStudents();
+    const marks = this.getMarks();
+    const projects = this.getGraphProjects();
+    const teachers = this.getTeachers();
+
+    const demoStudents = students.filter((s) => s.id.startsWith('stu-') || s.name === 'Kartik' || s.name === 'Ananya');
+    const demoMarks = marks.filter((m) => m.id.startsWith('marks-seed-'));
+    const demoProjects = projects.filter((p) => p.id.startsWith('proj-seed-'));
+    const demoTeachers = teachers.filter((t) => t.id === 'tea-vikram-seth');
+
+    return {
+      totalStudents: students.length,
+      demoStudentsCount: demoStudents.length,
+      genuineStudentsCount: students.length - demoStudents.length,
+      totalMarksCount: marks.length,
+      demoMarksCount: demoMarks.length,
+      totalProjectsCount: projects.length,
+      demoProjectsCount: demoProjects.length,
+      demoTeachersCount: demoTeachers.length,
+    };
+  },
+
+  backupAllData(): string {
+    const data = {
+      backupTimestamp: new Date().toISOString(),
+      schoolSettings: this.getSchoolSettings(),
+      classConfigs: this.getClassConfigs(),
+      teachers: this.getTeachers(),
+      students: this.getStudents(),
+      exams: this.getExams(),
+      marks: this.getMarks(),
+      graphProjects: this.getGraphProjects(),
+      logs: this.getLogs(),
+    };
+    return JSON.stringify(data, null, 2);
+  },
+
+  cleanupDemoData(): void {
+    const students = this.getStudents().filter((s) => !(s.id.startsWith('stu-') || s.name === 'Kartik' || s.name === 'Ananya'));
+    const marks = this.getMarks().filter((m) => !m.id.startsWith('marks-seed-'));
+    const projects = this.getGraphProjects().filter((p) => !p.id.startsWith('proj-seed-'));
+    const teachers = this.getTeachers().filter((t) => t.id !== 'tea-vikram-seth');
+
+    this.saveStudents(students);
+    this.saveMarks(marks);
+    this.saveGraphProjects(projects);
+    this.saveTeachers(teachers);
+
+    this.addLog({
+      performedBy: {
+        role: 'ADMIN',
+        id: 'SF-ADM-001',
+        name: 'Dr. Alok Verma (Administrator)',
+      },
+      action: 'CLEANUP_DEMO_DATA',
+      details: 'Cleaned up demo students, placeholder marks, and sample graph projects for production readiness.',
+    });
+  },
+
   resetToDefaultData(): void {
     localStorage.removeItem(STORAGE_KEYS.TEACHERS);
     localStorage.removeItem(STORAGE_KEYS.STUDENTS);
@@ -447,7 +667,9 @@ export const StorageService = {
     localStorage.removeItem(STORAGE_KEYS.LOGS);
     localStorage.removeItem(STORAGE_KEYS.GRAPH_PROJECTS);
     localStorage.removeItem(STORAGE_KEYS.SCHOOL_SETTINGS);
+    localStorage.removeItem(STORAGE_KEYS.CLASS_CONFIGS);
     this.getSchoolSettings();
+    this.getClassConfigs();
     this.getTeachers();
     this.getStudents();
     this.getExams();

@@ -1,35 +1,60 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { StorageService } from '../../utils/storage';
+import { TeacherSignupModal } from './TeacherSignupModal';
 import { ShieldCheck, GraduationCap, Lock, Check, Sparkles, RefreshCw, AlertCircle } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
-  const { loginAsAdmin, loginAsTeacher, loginWithGoogle, availableTeachers } = useAuth();
-  const [emailInput, setEmailInput] = useState('');
+  const { loginAsAdmin, loginAsTeacher, loginWithCredentials, loginWithGoogle, availableTeachers } = useAuth();
+  const [loginRole, setLoginRole] = useState<'TEACHER' | 'ADMIN'>('TEACHER');
+  const [teacherIdInput, setTeacherIdInput] = useState('SF-TEA-J8M4Q6');
+  const [passwordInput, setPasswordInput] = useState('SF-TEA-J8M4Q6');
+  const [adminIdInput, setAdminIdInput] = useState('admin');
+  const [adminPasswordInput, setAdminPasswordInput] = useState('admin');
   const [errorMsg, setErrorMsg] = useState('');
   const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
 
   const handleCustomGoogleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailInput.trim()) return;
+    setErrorMsg('');
+    const res = loginWithGoogle(emailInput);
+    if (!res.success) {
+      setErrorMsg(res.message || 'Email not recognized. Please sign up or use a valid teacher email.');
+    } else {
+      setShowGoogleModal(false);
+    }
+  };
 
-    const ok = loginWithGoogle(emailInput);
-    if (!ok) {
-      setErrorMsg(`No authorized account found for "${emailInput}". Please select an authorized account below.`);
+  const handleCredentialSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (loginRole === 'TEACHER') {
+      const res = loginWithCredentials(teacherIdInput, passwordInput);
+      if (!res.success) {
+        setErrorMsg(res.message || 'Login failed. Please verify your Teacher ID and Password.');
+      }
+    } else {
+      const res = loginWithCredentials(adminIdInput, adminPasswordInput);
+      if (!res.success) {
+        setErrorMsg(res.message || 'Login failed. Please verify Admin credentials.');
+      }
     }
   };
 
   const handleResetData = () => {
-    if (confirm('Reset application to default seed data? (Jyoti Panchal, 40 students in Class X – Platinum, exams and marks will be reloaded).')) {
+    if (confirm('Reset application to default seed data? (Jyoti Panchal, Class VI & X, subjects and sample records will be reloaded).')) {
       StorageService.resetToDefaultData();
       window.location.reload();
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-10 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Decorative Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
         {/* Brand Crest */}
@@ -48,106 +73,188 @@ export const LoginView: React.FC = () => {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg relative z-10">
-        <div className="bg-slate-900/90 backdrop-blur-md py-8 px-6 shadow-2xl rounded-2xl sm:px-10 border border-slate-800">
+      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-lg relative z-10">
+        <div className="bg-slate-900/95 backdrop-blur-md py-7 px-6 shadow-2xl rounded-2xl sm:px-10 border border-slate-800">
           {/* Policy Notice Box */}
-          <div className="mb-6 p-3.5 bg-slate-800/80 rounded-xl border border-slate-700/80 text-2xs text-slate-300 flex items-start gap-2.5">
+          <div className="mb-5 p-3 bg-slate-800/80 rounded-xl border border-slate-700/80 text-2xs text-slate-300 flex items-start gap-2.5">
             <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
             <div>
               <strong className="text-slate-100 block">Strict 2-Role Access Policy:</strong>
-              Students exist strictly as academic records managed by teachers. There is no student authentication or login portal in this system.
+              Only ADMIN and TEACHER logins are permitted. There is no student authentication or student dashboard.
             </div>
           </div>
 
-          <div className="space-y-4">
-            {/* Primary Google Auth Button */}
+          {/* Role Tabs */}
+          <div className="flex rounded-xl bg-slate-800/90 p-1 mb-5 border border-slate-700">
             <button
               type="button"
-              onClick={() => setShowGoogleModal(true)}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-700 rounded-xl text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 transition-all shadow-xs cursor-pointer group"
+              onClick={() => {
+                setLoginRole('TEACHER');
+                setErrorMsg('');
+              }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                loginRole === 'TEACHER'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                />
-              </svg>
-              <span>Sign in with Authorized Google Account</span>
+              Teacher Login
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLoginRole('ADMIN');
+                setErrorMsg('');
+              }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                loginRole === 'ADMIN'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Admin Login
+            </button>
+          </div>
 
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-800" />
-              </div>
-              <div className="relative flex justify-center text-3xs uppercase tracking-wider">
-                <span className="bg-slate-900 px-3 text-slate-500 font-semibold">
-                  Or Instant Role Access
-                </span>
-              </div>
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-rose-950/50 border border-rose-800 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+              <span>{errorMsg}</span>
             </div>
+          )}
 
-            {/* Quick Login Cards for Evaluators */}
-            <div className="space-y-2.5">
-              {/* Teacher Jyoti Panchal (Target Requirement) */}
+          {/* Credential Form */}
+          <form onSubmit={handleCredentialSubmit} className="space-y-4">
+            {loginRole === 'TEACHER' ? (
+              <>
+                <div>
+                  <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                    Teacher ID *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={teacherIdInput}
+                    onChange={(e) => setTeacherIdInput(e.target.value)}
+                    placeholder="e.g. SF-TEA-J8M4Q6"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-mono font-medium focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300">
+                      Password *
+                    </label>
+                    <span className="text-3xs text-amber-300 font-medium">
+                      Password is your Teacher ID
+                    </span>
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    placeholder="Enter your Teacher ID as password"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-mono font-medium focus:outline-none focus:border-blue-500"
+                  />
+                  <p className="mt-1 text-3xs text-slate-400">
+                    Rule: Jo Teacher ID hogi wahi password hoga for login.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full mt-2 py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all shadow-md cursor-pointer"
+                >
+                  Sign In as Teacher
+                </button>
+
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsSignupOpen(true)}
+                    className="text-xs text-blue-400 hover:text-blue-300 font-semibold underline cursor-pointer"
+                  >
+                    Don't have a Teacher ID? Create Account (Self-Registration)
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                    Admin ID or Email *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={adminIdInput}
+                    onChange={(e) => setAdminIdInput(e.target.value)}
+                    placeholder="admin or principal@scorefuture.edu"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                    Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={adminPasswordInput}
+                    onChange={(e) => setAdminPasswordInput(e.target.value)}
+                    placeholder="admin"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full mt-2 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition-all shadow-md cursor-pointer"
+                >
+                  Sign In as Administrator
+                </button>
+              </>
+            )}
+          </form>
+
+          {/* Quick Access Pills for Evaluator convenience */}
+          <div className="mt-6 pt-4 border-t border-slate-800">
+            <div className="text-3xs uppercase tracking-wider text-slate-400 font-semibold mb-2 text-center">
+              Quick Test Personas
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => loginAsTeacher('SF-TEA-J8M4Q6')}
-                className="w-full text-left p-3.5 rounded-xl border border-indigo-500/40 bg-indigo-950/30 hover:bg-indigo-900/40 transition-all flex items-center justify-between group cursor-pointer"
+                className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-left transition-all cursor-pointer"
               >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors">
-                      Jyoti Panchal
-                    </span>
-                    <span className="text-3xs font-mono font-bold px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded">
-                      SF-TEA-J8M4Q6
-                    </span>
-                  </div>
-                  <div className="text-2xs text-indigo-200/70 mt-0.5">
-                    Class X – Platinum · 40 Enrolled Student Records
-                  </div>
-                </div>
-                <span className="text-3xs font-bold text-indigo-300 bg-indigo-500/20 px-2.5 py-1 rounded-md">
-                  Login as Teacher →
-                </span>
+                <div className="text-2xs font-bold text-white truncate">Jyoti Panchal</div>
+                <div className="text-3xs text-blue-300 font-mono">SF-TEA-J8M4Q6</div>
               </button>
 
-              {/* Administrator */}
               <button
                 type="button"
                 onClick={loginAsAdmin}
-                className="w-full text-left p-3.5 rounded-xl border border-slate-800 bg-slate-800/40 hover:bg-slate-800/70 transition-all flex items-center justify-between group cursor-pointer"
+                className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-left transition-all cursor-pointer"
               >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
-                      Dr. Alok Verma
-                    </span>
-                    <span className="text-3xs font-mono font-bold px-1.5 py-0.5 bg-amber-500/20 text-amber-300 rounded">
-                      ADMIN
-                    </span>
-                  </div>
-                  <div className="text-2xs text-slate-400 mt-0.5">
-                    Principal & Academic Administrator (School-Wide Access)
-                  </div>
-                </div>
-                <span className="text-3xs font-bold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-md">
-                  Login as Admin →
-                </span>
+                <div className="text-2xs font-bold text-white truncate">Dr. Alok Verma</div>
+                <div className="text-3xs text-amber-300 font-mono">ADMIN ACCESS</div>
               </button>
             </div>
+          </div>
+
+          {/* Google Auth Alternative */}
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => setShowGoogleModal(true)}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-slate-800 rounded-xl text-2xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all cursor-pointer"
+            >
+              <span>Or sign in with Google Account</span>
+            </button>
           </div>
 
           {/* Reset App Data Button */}
@@ -274,6 +381,15 @@ export const LoginView: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+      {isSignupOpen && (
+        <TeacherSignupModal
+          isOpen={isSignupOpen}
+          onClose={() => setIsSignupOpen(false)}
+          onSuccess={(newTeacher) => {
+            loginAsTeacher(newTeacher.teacherId);
+          }}
+        />
       )}
     </div>
   );

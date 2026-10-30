@@ -1,15 +1,26 @@
 export type UserRole = 'ADMIN' | 'TEACHER';
 
+export interface ClassConfig {
+  id: string;
+  name: string; // e.g. "VI", "X", "XII - PCM", "XII - PCB"
+  sections: string[]; // e.g. ["Gold", "Platinum"] or ["PCM", "PCB"]
+  academicSession: string; // e.g. "2026-2027"
+  subjects: Subject[]; // configured subjects with specific maxMarks
+}
+
 export interface Teacher {
   id: string;
-  teacherId: string; // e.g. SF-TEA-J8M4Q6
+  teacherId: string; // e.g. SF-TEA-J8M4Q6 (used as login ID & password)
   name: string;
   email: string;
   avatar?: string;
-  designation?: string; // e.g. "Senior PGT Teacher"
+  designation?: string; // e.g. "Senior Secondary Faculty"
   phone?: string;
-  assignedClass: string; // e.g. "X"
-  assignedSection: string; // e.g. "Platinum"
+  assignedClass: string; // e.g. "VI" or "X"
+  assignedSection: string; // e.g. "Gold" or "Platinum"
+  academicSession?: string; // e.g. "2026-2027"
+  assignedSubjectIds?: string[]; // IDs of assigned subjects
+  assignedSubjects?: Subject[]; // full subject objects with maxMarks
   department?: string;
   active: boolean;
   permissions: {
@@ -29,6 +40,7 @@ export interface StudentRecord {
   assignedTeacherId: string; // references Teacher.teacherId
   assignedTeacherName: string;
   academicSession: string; // e.g. "2025-2026"
+  remarks?: string;
   createdAt: string;
 }
 
@@ -163,7 +175,9 @@ export interface AuditLog {
     | 'SAVE_GRAPH_PROJECT'
     | 'DELETE_GRAPH_PROJECT'
     | 'UPDATE_PROFILE'
-    | 'UPDATE_SCHOOL_SETTINGS';
+    | 'UPDATE_SCHOOL_SETTINGS'
+    | 'MANAGE_CLASS_SUBJECTS'
+    | 'CLEANUP_DEMO_DATA';
   details: string;
   metadata?: Record<string, any>;
 }

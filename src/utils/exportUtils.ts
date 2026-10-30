@@ -375,7 +375,16 @@ export const ExportService = {
     let currentPageNum = 1;
 
     subjects.forEach((subject) => {
-      const allItems = subjectGraphDataMap[subject.id] || [];
+      const rawItems = subjectGraphDataMap[subject.id] || [];
+      const allItems = [...rawItems].sort((a, b) => {
+        if (a.percentage !== null && b.percentage !== null) {
+          if (a.percentage !== b.percentage) return a.percentage - b.percentage;
+          return (a.studentName || '').localeCompare(b.studentName || '');
+        }
+        if (a.percentage !== null) return -1;
+        if (b.percentage !== null) return 1;
+        return (a.studentName || '').localeCompare(b.studentName || '');
+      });
       const chunkCount = Math.max(1, Math.ceil(allItems.length / STUDENTS_PER_GRAPH));
 
       for (let chunkIdx = 0; chunkIdx < chunkCount; chunkIdx++) {
@@ -441,7 +450,7 @@ export const ExportService = {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7.5);
         doc.setTextColor(100, 116, 139);
-        doc.text(`Max 10 Students per Graph · Total Assessed in Subject: ${allItems.length} · Decreasing Percentage Order: Highest on Left → Lowest on Right`, chartX + 12, chartY + 15);
+        doc.text(`Max 10 Students per Graph · Total Assessed in Subject: ${allItems.length} · Increasing Percentage Order: Lowest on Left → Highest on Right`, chartX + 12, chartY + 15);
 
         // Y-Axis Grid Lines for 0%, 20%, 40%, 60%, 80%, 100%
         const gridLeft = chartX + 24;
@@ -614,8 +623,18 @@ export const ExportService = {
     const pageHeight = 210;
     const logoBase64 = await loadBase64Image(SUREVIN_ASSETS.LOGO);
 
+    const sortedItems = [...items].sort((a, b) => {
+      if (a.percentage !== null && b.percentage !== null) {
+        if (a.percentage !== b.percentage) return a.percentage - b.percentage;
+        return (a.studentName || '').localeCompare(b.studentName || '');
+      }
+      if (a.percentage !== null) return -1;
+      if (b.percentage !== null) return 1;
+      return (a.studentName || '').localeCompare(b.studentName || '');
+    });
+
     const STUDENTS_PER_GRAPH = 10;
-    const chunkCount = Math.max(1, Math.ceil(items.length / STUDENTS_PER_GRAPH));
+    const chunkCount = Math.max(1, Math.ceil(sortedItems.length / STUDENTS_PER_GRAPH));
 
     for (let chunkIdx = 0; chunkIdx < chunkCount; chunkIdx++) {
       if (chunkIdx > 0) {
@@ -623,7 +642,7 @@ export const ExportService = {
       }
 
       const startIdx = chunkIdx * STUDENTS_PER_GRAPH;
-      const chunkItems = items.slice(startIdx, startIdx + STUDENTS_PER_GRAPH);
+      const chunkItems = sortedItems.slice(startIdx, startIdx + STUDENTS_PER_GRAPH);
 
       // Top royal blue header bar
       doc.setFillColor(30, 58, 138); // Blue 900
@@ -681,7 +700,7 @@ export const ExportService = {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7.5);
       doc.setTextColor(100, 116, 139);
-      doc.text(`Max 10 Students per Graph · Total Assessed in Subject: ${items.length} · Decreasing Percentage Order: Highest on Left → Lowest on Right`, chartX + 12, chartY + 15);
+      doc.text(`Max 10 Students per Graph · Total Assessed in Subject: ${items.length} · Increasing Percentage Order: Lowest on Left → Highest on Right`, chartX + 12, chartY + 15);
 
       // Y-Axis Grid Lines
       const gridLeft = chartX + 24;

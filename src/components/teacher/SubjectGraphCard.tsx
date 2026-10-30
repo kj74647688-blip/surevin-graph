@@ -81,7 +81,7 @@ export const SubjectGraphCard: React.FC<SubjectGraphCardProps> = ({
                 Subtitle: Student Performance · Class {meta.className} – {meta.sectionName} · {meta.examinationName} ({meta.academicSession})
               </div>
               <div className="text-3xs text-slate-400 mt-0.5">
-                Teacher: {meta.teacherName} ({meta.teacherId}) · Sorted Decreasing: Highest on Left → Lowest on Right
+                Teacher: {meta.teacherName} ({meta.teacherId}) · Increasing Percentage Order: Lowest on Left → Highest on Right
               </div>
             </div>
 

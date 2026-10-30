@@ -53,31 +53,58 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
 
   // Examination metadata for current working draft
   const [examName, setExamName] = useState('Mid-Term Examination 2026');
-  const [academicSession, setAcademicSession] = useState('2025-2026');
+  const [academicSession, setAcademicSession] = useState(initialTeacher.academicSession || '2026-2027');
   const [publishStatus, setPublishStatus] = useState<'draft' | 'published'>('published');
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
 
-  // Default Spreadsheet subjects (Matching video reference: Hindi, English, Maths, Science)
-  const [subjects, setSubjects] = useState<SpreadsheetSubject[]>([
-    { id: 'sub-hindi', name: 'Hindi', maxMarks: 80 },
-    { id: 'sub-eng', name: 'English', maxMarks: 80 },
-    { id: 'sub-math', name: 'Maths', maxMarks: 80 },
-    { id: 'sub-sci', name: 'Science', maxMarks: 80 },
-  ]);
+  // Automatically load admin-assigned subjects and maximum marks for this teacher
+  const [subjects, setSubjects] = useState<SpreadsheetSubject[]>(() => {
+    const assigned = StorageService.getTeacherAssignedSubjects(initialTeacher);
+    if (assigned && assigned.length > 0) {
+      return assigned.map((sub) => ({
+        id: sub.id,
+        name: sub.name,
+        maxMarks: sub.maxMarks,
+      }));
+    }
+    return [
+      { id: 'sub-hindi', name: 'Hindi', maxMarks: 80 },
+      { id: 'sub-eng', name: 'English', maxMarks: 80 },
+      { id: 'sub-math', name: 'Maths', maxMarks: 80 },
+      { id: 'sub-sci', name: 'Science', maxMarks: 80 },
+    ];
+  });
 
-  // Initial student rows (Matching video reference sample data: Kartik, Ananya, Anjali, etc.)
-  const [rows, setRows] = useState<SpreadsheetRow[]>([
-    { id: 'row-1', studentName: 'Kartik', marks: { 'sub-hindi': '67', 'sub-eng': '72', 'sub-math': '65', 'sub-sci': '78' } },
-    { id: 'row-2', studentName: 'Ananya', marks: { 'sub-hindi': '60', 'sub-eng': '70', 'sub-math': '75', 'sub-sci': '68' } },
-    { id: 'row-3', studentName: 'Anjali', marks: { 'sub-hindi': '55', 'sub-eng': '64', 'sub-math': '71', 'sub-sci': '72' } },
-    { id: 'row-4', studentName: 'Aarav Sharma', marks: { 'sub-hindi': '74', 'sub-eng': '76', 'sub-math': '78', 'sub-sci': '77' } },
-    { id: 'row-5', studentName: 'Aditi Verma', marks: { 'sub-hindi': '68', 'sub-eng': '71', 'sub-math': '70', 'sub-sci': '73' } },
-    { id: 'row-6', studentName: 'Akash Patel', marks: { 'sub-hindi': '52', 'sub-eng': '58', 'sub-math': '49', 'sub-sci': '62' } },
-    { id: 'row-7', studentName: 'Aryan Gupta', marks: { 'sub-hindi': '64', 'sub-eng': '69', 'sub-math': '72', 'sub-sci': '66' } },
-    { id: 'row-8', studentName: 'Bhavna Kulkarni', marks: { 'sub-hindi': '28', 'sub-eng': '35', 'sub-math': '26', 'sub-sci': '31' } },
-    { id: 'row-9', studentName: 'Chirag Reddy', marks: { 'sub-hindi': '48', 'sub-eng': '52', 'sub-math': '44', 'sub-sci': '50' } },
-    { id: 'row-10', studentName: 'Hardik Pandya', marks: { 'sub-hindi': '38', 'sub-eng': '44', 'sub-math': '36', 'sub-sci': '41' } },
-  ]);
+  // Student rows initialized from real assigned class roster or default sample
+  const [rows, setRows] = useState<SpreadsheetRow[]>(() => {
+    const classStudents = StorageService.getStudents().filter(
+      (s) =>
+        s.assignedTeacherId === initialTeacher.teacherId ||
+        (s.class === initialTeacher.assignedClass && s.section === initialTeacher.assignedSection)
+    );
+
+    if (classStudents.length > 0) {
+      return classStudents.map((s) => ({
+        id: `row-${s.id}`,
+        studentName: s.name,
+        rollNumber: s.rollNumber,
+        marks: {},
+      }));
+    }
+
+    return [
+      { id: 'row-1', studentName: 'Kartik', marks: { 'sub-hindi': '67', 'sub-eng': '72', 'sub-math': '65', 'sub-sci': '78' } },
+      { id: 'row-2', studentName: 'Ananya', marks: { 'sub-hindi': '60', 'sub-eng': '70', 'sub-math': '75', 'sub-sci': '68' } },
+      { id: 'row-3', studentName: 'Anjali', marks: { 'sub-hindi': '55', 'sub-eng': '64', 'sub-math': '71', 'sub-sci': '72' } },
+      { id: 'row-4', studentName: 'Aarav Sharma', marks: { 'sub-hindi': '74', 'sub-eng': '76', 'sub-math': '78', 'sub-sci': '77' } },
+      { id: 'row-5', studentName: 'Aditi Verma', marks: { 'sub-hindi': '68', 'sub-eng': '71', 'sub-math': '70', 'sub-sci': '73' } },
+      { id: 'row-6', studentName: 'Akash Patel', marks: { 'sub-hindi': '52', 'sub-eng': '58', 'sub-math': '49', 'sub-sci': '62' } },
+      { id: 'row-7', studentName: 'Aryan Gupta', marks: { 'sub-hindi': '64', 'sub-eng': '69', 'sub-math': '72', 'sub-sci': '66' } },
+      { id: 'row-8', studentName: 'Bhavna Kulkarni', marks: { 'sub-hindi': '28', 'sub-eng': '35', 'sub-math': '26', 'sub-sci': '31' } },
+      { id: 'row-9', studentName: 'Chirag Reddy', marks: { 'sub-hindi': '48', 'sub-eng': '52', 'sub-math': '44', 'sub-sci': '50' } },
+      { id: 'row-10', studentName: 'Hardik Pandya', marks: { 'sub-hindi': '38', 'sub-eng': '44', 'sub-math': '36', 'sub-sci': '41' } },
+    ];
+  });
 
   // UI state
   const [graphsGenerated, setGraphsGenerated] = useState(true);
@@ -213,13 +240,17 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
           };
         })
         .sort((a, b) => {
-          // Sort strictly decreasing: Highest on left, lowest on right
+          // Sort strictly increasing: Lowest percentage on left, highest on right, missing/absent at end
           if (a.percentage !== null && b.percentage !== null) {
-            return b.percentage - a.percentage;
+            if (a.percentage !== b.percentage) {
+              return a.percentage - b.percentage;
+            }
+            return (a.studentName || '').localeCompare(b.studentName || '');
           }
+          // Students with valid percentages appear first (left), missing/absent appear at the end (right)
           if (a.percentage !== null) return -1;
           if (b.percentage !== null) return 1;
-          return a.studentName.localeCompare(b.studentName);
+          return (a.studentName || '').localeCompare(b.studentName || '');
         });
 
       map[sub.id] = items;

@@ -114,25 +114,44 @@ export function calculateSubjectPerformance(
 }
 
 /**
- * Sorts subject performances in strictly decreasing percentage order.
- * Highest percentage appears on the left, lowest on the right.
- * Missing/Grey subjects are placed at the very end.
+ * Sorts subject performances in strictly INCREASING percentage order.
+ * Lowest percentage on the left.
+ * Highest percentage on the right.
+ * Missing or absent entries at the end.
+ * Equal percentages preserve original student-list order.
  */
-export function sortPerformancesDescending(items: CalculatedSubjectPerformance[]): CalculatedSubjectPerformance[] {
+export function sortPerformancesAscending(items: CalculatedSubjectPerformance[]): CalculatedSubjectPerformance[] {
   return [...items].sort((a, b) => {
-    // If both have percentage
+    // Both have valid percentages -> lowest first (increasing order)
     if (a.percentage !== null && b.percentage !== null) {
-      return b.percentage - a.percentage;
+      return a.percentage - b.percentage;
     }
-    // If a has percentage and b doesn't, a comes first
+    // a has percentage, b is missing/absent -> a comes first
     if (a.percentage !== null && b.percentage === null) {
       return -1;
     }
-    // If b has percentage and a doesn't, b comes first
+    // b has percentage, a is missing/absent -> b comes first
     if (a.percentage === null && b.percentage !== null) {
       return 1;
     }
-    // If neither has percentage, sort by subject name
+    return 0;
+  });
+}
+
+/**
+ * Sorts subject performances in strictly decreasing percentage order.
+ */
+export function sortPerformancesDescending(items: CalculatedSubjectPerformance[]): CalculatedSubjectPerformance[] {
+  return [...items].sort((a, b) => {
+    if (a.percentage !== null && b.percentage !== null) {
+      return b.percentage - a.percentage;
+    }
+    if (a.percentage !== null && b.percentage === null) {
+      return -1;
+    }
+    if (a.percentage === null && b.percentage !== null) {
+      return 1;
+    }
     return a.subjectName.localeCompare(b.subjectName);
   });
 }
