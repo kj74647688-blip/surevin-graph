@@ -33,34 +33,8 @@ export const Navbar: React.FC = () => {
             </div>
           </div>
 
-          {/* User Profile & Role Switcher */}
+          {/* User Profile Info */}
           <div className="flex items-center gap-3">
-            {/* Quick Switch Persona (For Evaluation) */}
-            <div className="hidden md:flex items-center gap-1.5 p-1 bg-slate-100 rounded-lg border border-slate-200">
-              <span className="text-3xs font-bold text-slate-400 uppercase px-2">Switch View:</span>
-              <button
-                type="button"
-                onClick={() => loginAsTeacher('SF-TEA-J8M4Q6')}
-                className={`px-2.5 py-1 text-2xs font-bold rounded-md transition-all cursor-pointer ${
-                  user.role === 'TEACHER' && user.teacherId === 'SF-TEA-J8M4Q6'
-                    ? 'bg-white text-indigo-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Teacher: Jyoti Panchal (X - Plat)
-              </button>
-              <button
-                type="button"
-                onClick={loginAsAdmin}
-                className={`px-2.5 py-1 text-2xs font-bold rounded-md transition-all cursor-pointer ${
-                  user.role === 'ADMIN'
-                    ? 'bg-white text-indigo-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Admin: Dr. Verma
-              </button>
-            </div>
 
             {/* User Info Capsule */}
             <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200">

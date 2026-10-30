@@ -29,7 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const ADMIN_PROFILE: AuthUser = {
   id: 'admin-1',
   role: 'ADMIN',
-  name: 'Dr. Alok Verma (Administrator)',
+  name: 'Mr. Sharukh Tyagi',
   email: 'admin@surevin.edu',
 };
 

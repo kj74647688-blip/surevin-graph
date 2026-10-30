@@ -29,7 +29,7 @@ const initialSchoolSettings: SchoolSettings = {
   academicSession: '2025-2026',
   affiliationNumber: 'CBSE Affiliation No. 2130849',
   address: 'Niwari Road, Modinagar, Ghaziabad, Delhi-NCR',
-  principalName: 'Dr. Alok Verma',
+  principalName: 'Mr. Sharukh Tyagi',
 };
 
 // Flexible Class-Wise Subject Configurations (Admin Managed)
@@ -659,7 +659,7 @@ export const StorageService = {
       performedBy: {
         role: 'ADMIN',
         id: 'SF-ADM-001',
-        name: 'Dr. Alok Verma (Administrator)',
+        name: 'Mr. Sharukh Tyagi (Administrator)',
       },
       action: 'CLEANUP_DEMO_DATA',
       details: 'Cleaned up demo students, placeholder marks, and sample graph projects for production readiness.',

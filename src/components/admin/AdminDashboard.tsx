@@ -89,7 +89,7 @@ export const AdminDashboard: React.FC = () => {
           performedBy: {
             role: 'ADMIN',
             id: 'SF-ADM-001',
-            name: 'Dr. Alok Verma (Administrator)',
+            name: 'Mr. Sharukh Tyagi (Administrator)',
           },
           action: 'TOGGLE_TEACHER_STATUS',
           details: `${nextStatus ? 'Activated' : 'Suspended'} teacher account for ${t.name} (${t.teacherId}).`,
@@ -154,14 +154,14 @@ export const AdminDashboard: React.FC = () => {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-                  ScoreFuture Institutional Administrator Portal
+                  Surevin International School Admin Portal
                 </h1>
                 <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-md">
                   Master Control
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-slate-600">
-                <span>Principal: Dr. Alok Verma</span>
+                <span>Administrator: Mr. Sharukh Tyagi</span>
                 <span>·</span>
                 <span>School-Wide Access</span>
                 <span>·</span>
