@@ -13,6 +13,7 @@ export interface Teacher {
   teacherId: string; // e.g. SF-TEA-J8M4Q6 (used as login ID & password)
   name: string;
   email: string;
+  password?: string;
   avatar?: string;
   designation?: string; // e.g. "Senior Secondary Faculty"
   phone?: string;

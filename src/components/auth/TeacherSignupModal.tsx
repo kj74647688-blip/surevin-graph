@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StorageService } from '../../utils/storage';
 import { Teacher } from '../../types';
-import { X, GraduationCap, ShieldCheck, CheckCircle2, Sparkles } from 'lucide-react';
+import { X, GraduationCap, CheckCircle2, Lock, KeyRound, AlertCircle } from 'lucide-react';
 
 interface TeacherSignupModalProps {
   isOpen: boolean;
@@ -16,26 +16,38 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
 }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [schoolName, setSchoolName] = useState('Surevin International Residential School');
   const [mobileNumber, setMobileNumber] = useState('');
   const [selectedClass, setSelectedClass] = useState('VI');
   const [section, setSection] = useState('Gold');
   const [subjectsInput, setSubjectsInput] = useState('English, Hindi, Mathematics, Science');
   const [adminIdInput, setAdminIdInput] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successTeacher, setSuccessTeacher] = useState<Teacher | null>(null);
 
   if (!isOpen) return null;
 
-  const classesList = [
-    'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5',
-    'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10',
-    'Class 11', 'Class 12', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'
-  ];
-
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !email.trim()) return;
+    setErrorMsg('');
+
+    if (!fullName.trim() || !email.trim()) {
+      setErrorMsg('Please enter Full Name and Email.');
+      return;
+    }
+
+    if (!password.trim()) {
+      setErrorMsg('Please enter a password for your account.');
+      return;
+    }
+
+    if (password.trim() !== confirmPassword.trim()) {
+      setErrorMsg('Passwords do not match. Please re-enter.');
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -60,7 +72,8 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
       teacherId,
       name: fullName,
       email,
-      designation: 'Senior Teacher',
+      password: password.trim(),
+      designation: 'Senior Faculty',
       assignedClass: selectedClass.replace('Class ', ''),
       assignedSection: section,
       academicSession: '2026-2027',
@@ -103,10 +116,11 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
             </div>
             <div>
               <h3 className="font-extrabold text-base">Teacher Self-Registration</h3>
-              <p className="text-3xs text-blue-200">ScoreFuture Institutional Access</p>
+              <p className="text-3xs text-blue-200">Surevin Institutional Teacher Account</p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
           >
@@ -123,10 +137,21 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
               </div>
               <h4 className="text-lg font-bold text-white">Registration Successful!</h4>
               <p className="text-xs text-slate-300 max-w-xs mx-auto">
-                Your Teacher ID has been successfully generated. Your password is your Teacher ID.
+                Your Teacher account has been created. You can log in using your Teacher ID or Email with your Password.
               </p>
-              <div className="p-4 bg-slate-800 rounded-xl border border-slate-700 font-mono text-xs text-amber-300">
-                Teacher ID: {successTeacher.teacherId}
+              <div className="p-4 bg-slate-800 rounded-xl border border-slate-700 text-left space-y-2 font-mono text-xs">
+                <div className="flex justify-between text-slate-300">
+                  <span className="text-slate-400">Teacher ID:</span>
+                  <span className="text-amber-300 font-bold">{successTeacher.teacherId}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span className="text-slate-400">Email:</span>
+                  <span className="text-white">{successTeacher.email}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span className="text-slate-400">Password:</span>
+                  <span className="text-emerald-400 font-bold">{successTeacher.password}</span>
+                </div>
               </div>
               <button
                 type="button"
@@ -136,11 +161,18 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
                 }}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all shadow-md cursor-pointer"
               >
-                Proceed to Teacher Dashboard
+                Proceed to Dashboard
               </button>
             </div>
           ) : (
             <form onSubmit={handleSignup} className="space-y-4 text-xs">
+              {errorMsg && (
+                <div className="p-3 bg-rose-950/60 border border-rose-800 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300 mb-1">
@@ -157,7 +189,7 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
                 </div>
                 <div>
                   <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                    Google Email *
+                    Email Address *
                   </label>
                   <input
                     type="email"
@@ -166,6 +198,36 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="teacher@surevinschool.com"
                     className="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Password Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                    Set Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                    Confirm Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter password"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500 font-mono"
                   />
                 </div>
               </div>
@@ -256,8 +318,8 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
               </div>
 
               <div className="p-3 bg-blue-950/40 rounded-xl border border-blue-800/60 text-blue-200 text-3xs flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
-                <span>Google OAuth verified. Your Teacher ID will serve as your secure login password.</span>
+                <KeyRound className="w-4 h-4 text-amber-300 shrink-0" />
+                <span>Your custom password will be saved securely for login along with your generated Teacher ID.</span>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">

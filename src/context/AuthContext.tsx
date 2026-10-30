@@ -120,8 +120,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, message: `Teacher account (${teacher.teacherId}) is deactivated. Please contact administrator.` };
       }
 
-      // Password matches teacher ID or teacher email or surevinadmin@123
+      // Password matches set password or teacher ID or email or admin pass
       if (
+        (teacher.password && cleanPass === teacher.password) ||
         cleanPass.toLowerCase() === teacher.teacherId.toLowerCase() ||
         cleanPass.toLowerCase() === teacher.email.toLowerCase() ||
         cleanPass === 'surevinadmin@123' ||
@@ -132,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         return {
           success: false,
-          message: `Incorrect password. Password is your Teacher ID (${teacher.teacherId}).`,
+          message: 'Incorrect password. Please check your password and try again.',
         };
       }
     }

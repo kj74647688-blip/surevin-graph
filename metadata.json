@@ -1,6 +1,6 @@
 {
-  "name": "ScoreFuture Academic Analytics & Record System",
-  "description": "Comprehensive school examination management, teacher-assigned student records, automated subject-wise percentage graph engine, and PDF/Excel academic reports.",
+  "name": "Surevin International School Admin Portal",
+  "description": "Surevin International School Admin Portal and Academic Management System.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
