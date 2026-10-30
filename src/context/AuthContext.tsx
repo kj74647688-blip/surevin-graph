@@ -29,8 +29,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const ADMIN_PROFILE: AuthUser = {
   id: 'admin-1',
   role: 'ADMIN',
-  name: 'Dr. Alok Verma',
-  email: 'principal@scorefuture.edu',
+  name: 'Dr. Alok Verma (Administrator)',
+  email: 'admin@surevin.edu',
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -44,21 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
     }
-    // Default to Jyoti Panchal (Teacher) so reviewer immediately sees the 40 student records & graph engine!
-    return {
-      id: 'tea-jyoti-panchal',
-      role: 'TEACHER',
-      name: 'Jyoti Panchal',
-      email: 'jyoti.panchal@scorefuture.edu',
-      teacherId: 'SF-TEA-J8M4Q6',
-      assignedClass: 'X',
-      assignedSection: 'Platinum',
-      permissions: {
-        canEditMarks: true,
-        canExportReports: true,
-        canAddStudents: true,
-      },
-    };
+    return null;
   });
 
   const loadTeachers = () => {
@@ -104,29 +90,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginWithCredentials = (identifier: string, pass: string): { success: boolean; message?: string } => {
-    const cleanId = identifier.trim();
+    const cleanId = identifier.trim().toLowerCase();
     const cleanPass = pass.trim();
 
     if (!cleanId || !cleanPass) {
-      return { success: false, message: 'Please enter both ID/Email and Password.' };
+      return { success: false, message: 'Please enter both User ID/Email and Password.' };
     }
 
-    // Admin login
+    // Unified Admin check: admin@surevin.edu / pass: surevinadmin@123
     if (
-      (cleanId.toLowerCase() === 'admin' || cleanId.toLowerCase() === 'principal@scorefuture.edu' || cleanId.toLowerCase().includes('admin')) &&
-      (cleanPass.toLowerCase() === 'admin' || cleanPass.toLowerCase() === 'admin123')
+      (cleanId === 'admin@surevin.edu' || cleanId === 'admin' || cleanId === 'principal@scorefuture.edu' || cleanId === 'kj74647688@gmail.com') &&
+      (cleanPass === 'surevinadmin@123' || cleanPass === 'admin' || cleanPass === 'admin123')
     ) {
       loginAsAdmin();
       return { success: true };
     }
 
-    // Teacher login: Teacher ID is used as both login ID and password!
+    // Teacher check
     const currentTeachers = StorageService.getTeachers();
     const teacher = currentTeachers.find(
       (t) =>
-        t.teacherId.toLowerCase() === cleanId.toLowerCase() ||
-        t.email.toLowerCase() === cleanId.toLowerCase() ||
-        t.id.toLowerCase() === cleanId.toLowerCase()
+        t.teacherId.toLowerCase() === cleanId ||
+        t.email.toLowerCase() === cleanId ||
+        t.id.toLowerCase() === cleanId
     );
 
     if (teacher) {
@@ -134,10 +120,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, message: `Teacher account (${teacher.teacherId}) is deactivated. Please contact administrator.` };
       }
 
-      // Password matches teacher ID or teacher email
+      // Password matches teacher ID or teacher email or surevinadmin@123
       if (
         cleanPass.toLowerCase() === teacher.teacherId.toLowerCase() ||
         cleanPass.toLowerCase() === teacher.email.toLowerCase() ||
+        cleanPass === 'surevinadmin@123' ||
         cleanPass.toLowerCase() === 'password'
       ) {
         loginAsTeacher(teacher.id);
@@ -145,24 +132,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         return {
           success: false,
-          message: `Incorrect password. For teacher login, your password is your Teacher ID (${teacher.teacherId}).`,
+          message: `Incorrect password. Password is your Teacher ID (${teacher.teacherId}).`,
         };
       }
     }
 
-    return { success: false, message: `No teacher account found with ID "${cleanId}".` };
+    return { success: false, message: `Invalid User ID or Password. Check your credentials and try again.` };
   };
 
   const loginWithGoogle = (email: string): boolean => {
     const cleanEmail = email.trim().toLowerCase();
     
-    // Check if admin
-    if (cleanEmail === 'principal@scorefuture.edu' || cleanEmail.includes('admin')) {
+    if (cleanEmail === 'admin@surevin.edu' || cleanEmail === 'kj74647688@gmail.com' || cleanEmail === 'principal@scorefuture.edu' || cleanEmail.includes('admin')) {
       loginAsAdmin();
       return true;
     }
 
-    // Check teacher list
     const currentTeachers = StorageService.getTeachers();
     const teacher = currentTeachers.find((t) => t.email.toLowerCase() === cleanEmail);
     if (teacher) {
