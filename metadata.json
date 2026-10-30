@@ -1,0 +1,6 @@
+{
+  "name": "ScoreFuture Academic Analytics & Record System",
+  "description": "Comprehensive school examination management, teacher-assigned student records, automated subject-wise percentage graph engine, and PDF/Excel academic reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
