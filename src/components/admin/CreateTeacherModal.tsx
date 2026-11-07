@@ -26,12 +26,15 @@ export const CreateTeacherModal: React.FC<CreateTeacherModalProps> = ({
   const [canExportReports, setCanExportReports] = useState(true);
   const [canAddStudents, setCanAddStudents] = useState(true);
   const [generatedId, setGeneratedId] = useState(() => generateTeacherId());
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
   const handleRegenerateId = () => {
-    setGeneratedId(generateTeacherId());
+    const newId = generateTeacherId();
+    setGeneratedId(newId);
+    if (!password) setPassword(newId);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -53,11 +56,14 @@ export const CreateTeacherModal: React.FC<CreateTeacherModalProps> = ({
       return;
     }
 
+    const assignedPwd = password.trim() || generatedId;
+
     const newTeacher: Teacher = {
       id: 'tea-' + Date.now().toString(36),
       teacherId: generatedId,
       name: name.trim(),
       email: email.trim().toLowerCase(),
+      password: assignedPwd,
       assignedClass: assignedClass.trim().toUpperCase(),
       assignedSection: assignedSection.trim(),
       department: department.trim(),
@@ -155,6 +161,19 @@ export const CreateTeacherModal: React.FC<CreateTeacherModalProps> = ({
               placeholder="e.g. teacher@scorefuture.edu"
               value={email}
               onChange={(e) => { setEmail(e.target.value); setError(''); }}
+              className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Set Password (Optional - Defaults to Teacher ID)
+            </label>
+            <input
+              type="text"
+              placeholder={`Default: ${generatedId}`}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
             />
           </div>

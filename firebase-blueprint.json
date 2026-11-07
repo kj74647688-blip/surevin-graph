@@ -1,0 +1,139 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based access",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "email": { "type": "string", "minLength": 5, "maxLength": 128 },
+        "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "role": { "type": "string", "enum": ["ADMIN", "TEACHER"] },
+        "phone": { "type": "string", "maxLength": 20 },
+        "teacherId": { "type": "string", "maxLength": 50 },
+        "emailVerified": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "name", "role", "emailVerified"]
+    },
+    "Teacher": {
+      "title": "Teacher",
+      "description": "Authorized teacher account and roster record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "teacherId": { "type": "string", "minLength": 3, "maxLength": 50 },
+        "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "email": { "type": "string", "minLength": 5, "maxLength": 128 },
+        "password": { "type": "string", "maxLength": 100 },
+        "assignedClass": { "type": "string", "maxLength": 20 },
+        "assignedSection": { "type": "string", "maxLength": 20 },
+        "department": { "type": "string", "maxLength": 100 },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "teacherId", "name", "email", "assignedClass", "assignedSection"]
+    },
+    "StudentRecord": {
+      "title": "StudentRecord",
+      "description": "Student academic profile record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "rollNumber": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "class": { "type": "string", "maxLength": 20 },
+        "section": { "type": "string", "maxLength": 20 },
+        "assignedTeacherId": { "type": "string", "maxLength": 50 },
+        "assignedTeacherName": { "type": "string", "maxLength": 100 },
+        "academicSession": { "type": "string", "maxLength": 20 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "rollNumber", "class", "section", "assignedTeacherId"]
+    },
+    "Examination": {
+      "title": "Examination",
+      "description": "Configured examination session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "academicSession": { "type": "string", "maxLength": 20 },
+        "status": { "type": "string", "enum": ["active", "completed", "draft"] }
+      },
+      "required": ["id", "name", "academicSession", "status"]
+    },
+    "StudentMarksRecord": {
+      "title": "StudentMarksRecord",
+      "description": "Examination marks record per student",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "studentId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "examId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "updatedAt": { "type": "string" },
+        "updatedBy": { "type": "string" }
+      },
+      "required": ["id", "studentId", "examId"]
+    },
+    "GraphProject": {
+      "title": "GraphProject",
+      "description": "Teacher graph project and spreadsheet draft",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "teacherId": { "type": "string", "maxLength": 50 },
+        "teacherName": { "type": "string", "maxLength": 100 },
+        "class": { "type": "string", "maxLength": 20 },
+        "section": { "type": "string", "maxLength": 20 },
+        "examinationName": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["draft", "published"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "teacherId", "class", "section", "examinationName"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Security and operation audit event",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "timestamp": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "action", "details"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User account profiles and security roles"
+    },
+    "/teachers/{teacherId}": {
+      "schema": { "$ref": "#/entities/Teacher" },
+      "description": "Teacher directory and credentials"
+    },
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/StudentRecord" },
+      "description": "Student academic records"
+    },
+    "/exams/{examId}": {
+      "schema": { "$ref": "#/entities/Examination" },
+      "description": "School examinations"
+    },
+    "/marks/{markId}": {
+      "schema": { "$ref": "#/entities/StudentMarksRecord" },
+      "description": "Student examination marks"
+    },
+    "/graphProjects/{projectId}": {
+      "schema": { "$ref": "#/entities/GraphProject" },
+      "description": "Generated graph spreadsheets"
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Security audit trace logs"
+    }
+  }
+}

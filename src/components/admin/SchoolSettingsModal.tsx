@@ -25,7 +25,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
       performedBy: {
         role: 'ADMIN',
         id: 'SF-ADM-001',
-        name: 'Dr. Alok Verma (Administrator)',
+        name: 'Mr. Sharukh Tyagi (Administrator)',
       },
       action: 'UPDATE_SCHOOL_SETTINGS',
       details: `Updated school entity settings: "${settings.schoolName}" (Session: ${settings.academicSession}).`,

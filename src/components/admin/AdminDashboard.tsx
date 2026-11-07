@@ -37,6 +37,9 @@ import {
   CheckCircle,
   XCircle,
   Eye,
+  EyeOff,
+  Copy,
+  Key,
   Settings,
   Trash2,
   Layers
@@ -55,6 +58,14 @@ export const AdminDashboard: React.FC = () => {
 
   // Search & Filters
   const [teacherSearch, setTeacherSearch] = useState('');
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+
+  const togglePasswordVisibility = (teacherKey: string) => {
+    setVisiblePasswords((prev) => ({
+      ...prev,
+      [teacherKey]: !prev[teacherKey],
+    }));
+  };
   const [studentSearch, setStudentSearch] = useState('');
   const [selectedClassFilter, setSelectedClassFilter] = useState('ALL');
   const [selectedExamId, setSelectedExamId] = useState<string>(exams[0]?.id || 'exam-midterm-2026');
@@ -374,6 +385,7 @@ export const AdminDashboard: React.FC = () => {
                 <tr>
                   <th className="py-3 px-4">Teacher Name & Email</th>
                   <th className="py-3 px-4">Unique Teacher ID</th>
+                  <th className="py-3 px-4">Login Password</th>
                   <th className="py-3 px-4">Assigned Class & Section</th>
                   <th className="py-3 px-3 text-center">Managed Students</th>
                   <th className="py-3 px-3 text-center">Account Status</th>
@@ -389,6 +401,9 @@ export const AdminDashboard: React.FC = () => {
                       (s.class === t.assignedClass && s.section === t.assignedSection)
                   ).length;
 
+                  const isPwdVisible = visiblePasswords[t.id] || visiblePasswords[t.teacherId];
+                  const teacherPassword = t.password || t.teacherId;
+
                   return (
                     <tr key={t.id} className="hover:bg-slate-50 transition-colors">
                       <td className="py-3 px-4">
@@ -399,6 +414,32 @@ export const AdminDashboard: React.FC = () => {
                         <span className="font-mono font-bold text-xs px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded">
                           {t.teacherId}
                         </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-semibold text-xs text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 min-w-[80px]">
+                            {isPwdVisible ? teacherPassword : '••••••••'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => togglePasswordVisibility(t.id)}
+                            className="p-1 text-slate-400 hover:text-slate-700 rounded transition-colors cursor-pointer"
+                            title={isPwdVisible ? "Hide Password" : "Show Password"}
+                          >
+                            {isPwdVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-indigo-600" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`Teacher ID: ${t.teacherId}\nPassword: ${teacherPassword}`);
+                              alert(`Copied credentials for ${t.name}!\nTeacher ID: ${t.teacherId}\nPassword: ${teacherPassword}`);
+                            }}
+                            className="p-1 text-slate-400 hover:text-indigo-600 rounded transition-colors cursor-pointer"
+                            title="Copy ID & Password to Clipboard"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="font-semibold text-slate-800">

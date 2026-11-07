@@ -11,8 +11,10 @@ import {
   Download,
   Calendar,
   BookOpen,
-  CheckCircle2
+  CheckCircle2,
+  Share2
 } from 'lucide-react';
+import { ShareReportModal } from './ShareReportModal';
 
 interface StudentHistoryModalProps {
   isOpen: boolean;
@@ -27,6 +29,8 @@ export const StudentHistoryModal: React.FC<StudentHistoryModalProps> = ({
   student,
   teacher,
 }) => {
+  const [isShareOpen, setIsShareOpen] = React.useState(false);
+
   if (!isOpen) return null;
 
   const exams = StorageService.getExams();
@@ -340,6 +344,14 @@ export const StudentHistoryModal: React.FC<StudentHistoryModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => setIsShareOpen(true)}
+              className="px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Share Report</span>
+            </button>
+            <button
+              type="button"
               onClick={handleDownloadReport}
               className="px-3.5 py-1.5 text-xs font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-xl flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
             >
@@ -356,6 +368,21 @@ export const StudentHistoryModal: React.FC<StudentHistoryModalProps> = ({
           </div>
         </div>
       </div>
+
+      {isShareOpen && (
+        <ShareReportModal
+          isOpen={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+          reportTitle={`Surevin_${student.name.replace(/\s+/g, '_')}_Academic_History.pdf`}
+          className={`Class ${student.class} – ${student.section}`}
+          examName={exams[0]?.name || 'Academic Progress'}
+          teacherName={student.assignedTeacherName || teacher?.name || 'Assigned Faculty'}
+          onDownloadPdf={() => {
+            setIsShareOpen(false);
+            handleDownloadReport();
+          }}
+        />
+      )}
     </div>
   );
 };

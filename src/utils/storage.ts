@@ -11,6 +11,8 @@ import {
   ClassConfig,
   Subject
 } from '../types';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const STORAGE_KEYS = {
   TEACHERS: 'scorefuture_teachers_v2',
@@ -26,18 +28,18 @@ const STORAGE_KEYS = {
 
 const initialSchoolSettings: SchoolSettings = {
   schoolName: 'Surevin International Residential School, Niwari Modinagar',
-  academicSession: '2025-2026',
+  academicSession: '2026-2027',
   affiliationNumber: 'CBSE Affiliation No. 2130849',
   address: 'Niwari Road, Modinagar, Ghaziabad, Delhi-NCR',
-  principalName: 'Mr. Sharukh Tyagi',
+  principalName: 'Dr. Sarita Sindhu',
 };
 
 // Flexible Class-Wise Subject Configurations (Admin Managed)
 export const initialClassConfigs: ClassConfig[] = [
   {
     id: 'class-vi',
-    name: 'VI',
-    sections: ['Gold', 'Silver', 'Bronze'],
+    name: 'XII',
+    sections: ['PCM', 'Silver', 'Bronze'],
     academicSession: '2026-2027',
     subjects: [
       { id: 'sub-vi-eng', name: 'English', code: 'ENG-06', maxMarks: 80, passingMarks: 32 },
@@ -98,6 +100,7 @@ const initialTeachers: Teacher[] = [
     teacherId: 'SF-TEA-J8M4Q6',
     name: 'Jyoti Panchal',
     email: 'jyoti.panchal@scorefuture.edu',
+    password: 'jyoti123',
     designation: 'Senior Faculty (Mathematics & Science)',
     phone: '+91 98765 43210',
     assignedClass: 'VI',
@@ -113,42 +116,8 @@ const initialTeachers: Teacher[] = [
     },
     createdAt: '2025-06-15T09:00:00Z',
   },
-  {
-    id: 'tea-rajesh-sharma',
-    teacherId: 'SF-TEA-R4K9L2',
-    name: 'Rajesh Sharma',
-    email: 'rajesh.sharma@scorefuture.edu',
-    designation: 'PGT Physics Faculty',
-    phone: '+91 98112 33445',
-    assignedClass: 'IX',
-    assignedSection: 'Diamond',
-    department: 'Physics',
-    active: true,
-    permissions: {
-      canEditMarks: true,
-      canExportReports: true,
-      canAddStudents: true,
-    },
-    createdAt: '2025-06-18T10:30:00Z',
-  },
-  {
-    id: 'tea-anita-desai',
-    teacherId: 'SF-TEA-A2M7X1',
-    name: 'Anita Desai',
-    email: 'anita.desai@scorefuture.edu',
-    designation: 'Senior Faculty Chemistry',
-    phone: '+91 99220 88776',
-    assignedClass: 'XII',
-    assignedSection: 'Science A',
-    department: 'Chemistry',
-    active: true,
-    permissions: {
-      canEditMarks: true,
-      canExportReports: true,
-      canAddStudents: true,
-    },
-    createdAt: '2025-07-01T11:15:00Z',
-  },
+ 
+  
   {
     id: 'tea-vikram-seth',
     teacherId: 'SF-TEA-V9P3Z5',
@@ -201,15 +170,8 @@ const initialExams: Examination[] = [
 ];
 
 // 40 Students strictly under Jyoti Panchal (Class X – Platinum)
-const studentNames40 = [
-  'Kartik Sharma', 'Ananya Iyer', 'Anjali Nair', 'Aarav Sharma', 'Aditi Verma',
-  'Akash Patel', 'Aryan Gupta', 'Bhavna Kulkarni', 'Chirag Reddy', 'Devika Pillai',
-  'Divyansh Mehta', 'Esha Choudhury', 'Farhan Akhtar', 'Gauri Deshmukh', 'Hardik Pandya',
-  'Harshita Sen', 'Ishaan Malhotra', 'Jasmine Kaur', 'Kabir Das', 'Karan Johar',
-  'Manasvi Joshi', 'Mayank Agarwal', 'Meera Rajput', 'Naveen Kumar', 'Neha Saxena',
-  'Nikhil Rao', 'Payal Singhania', 'Pranav Mishra', 'Pooja Bhatt', 'Raghav Bansal',
-  'Rhea Kapoor', 'Rohan Roy', 'Sanya Mirchandani', 'Siddharth Basu', 'Sneha Ganguly',
-  'Tanvi Chawla', 'Tarun Bhatia', 'Urvi Parekh', 'Varun Dhawan', 'Vidya Balan'
+const studentNames40: string[] = [
+  
 ];
 
 function generateSeedStudents(): { students: StudentRecord[]; marks: StudentMarksRecord[] } {
@@ -286,21 +248,21 @@ function generateInitialGraphProject(): GraphGenerationRecord {
   ];
 
   const rows: SpreadsheetRow[] = [
-    { id: 'row-1', studentName: 'Kartik', rollNumber: '101', marks: { 'sub-hindi': '67', 'sub-eng': '72', 'sub-math': '65', 'sub-sci': '78' } },
-    { id: 'row-2', studentName: 'Ananya', rollNumber: '102', marks: { 'sub-hindi': '60', 'sub-eng': '70', 'sub-math': '75', 'sub-sci': '68' } },
-    { id: 'row-3', studentName: 'Anjali', rollNumber: '103', marks: { 'sub-hindi': '55', 'sub-eng': '64', 'sub-math': '71', 'sub-sci': '72' } },
-    { id: 'row-4', studentName: 'Aarav Sharma', rollNumber: '104', marks: { 'sub-hindi': '74', 'sub-eng': '76', 'sub-math': '78', 'sub-sci': '77' } },
-    { id: 'row-5', studentName: 'Aditi Verma', rollNumber: '105', marks: { 'sub-hindi': '68', 'sub-eng': '71', 'sub-math': '70', 'sub-sci': '73' } },
-    { id: 'row-6', studentName: 'Akash Patel', rollNumber: '106', marks: { 'sub-hindi': '52', 'sub-eng': '58', 'sub-math': '49', 'sub-sci': '62' } },
-    { id: 'row-7', studentName: 'Aryan Gupta', rollNumber: '107', marks: { 'sub-hindi': '64', 'sub-eng': '69', 'sub-math': '72', 'sub-sci': '66' } },
-    { id: 'row-8', studentName: 'Bhavna Kulkarni', rollNumber: '108', marks: { 'sub-hindi': '28', 'sub-eng': '35', 'sub-math': '26', 'sub-sci': '31' } },
-    { id: 'row-9', studentName: 'Chirag Reddy', rollNumber: '109', marks: { 'sub-hindi': '48', 'sub-eng': '52', 'sub-math': '44', 'sub-sci': '50' } },
-    { id: 'row-10', studentName: 'Devika Pillai', rollNumber: '110', marks: { 'sub-hindi': '62', 'sub-eng': '66', 'sub-math': '68', 'sub-sci': '70' } },
-    { id: 'row-11', studentName: 'Divyansh Mehta', rollNumber: '111', marks: { 'sub-hindi': '59', 'sub-eng': 'A', 'sub-math': '63', 'sub-sci': '65' } },
-    { id: 'row-12', studentName: 'Hardik Pandya', rollNumber: '112', marks: { 'sub-hindi': '38', 'sub-eng': '44', 'sub-math': '36', 'sub-sci': '41' } },
-    { id: 'row-13', studentName: 'Neha Saxena', rollNumber: '113', marks: { 'sub-hindi': '78', 'sub-eng': '76', 'sub-math': '79', 'sub-sci': '78' } },
-    { id: 'row-14', studentName: 'Rohan Roy', rollNumber: '114', marks: { 'sub-hindi': '50', 'sub-eng': '54', 'sub-math': '56', 'sub-sci': '52' } },
-    { id: 'row-15', studentName: 'Sneha Ganguly', rollNumber: '115', marks: { 'sub-hindi': '66', 'sub-eng': '68', 'sub-math': '70', 'sub-sci': '67' } },
+    { id: 'row-1', studentName: '', rollNumber: '101', marks: { 'sub-hindi': '67', 'sub-eng': '72', 'sub-math': '65', 'sub-sci': '78' } },
+    { id: 'row-2', studentName: '', rollNumber: '102', marks: { 'sub-hindi': '60', 'sub-eng': '70', 'sub-math': '75', 'sub-sci': '68' } },
+    { id: 'row-3', studentName: '', rollNumber: '103', marks: { 'sub-hindi': '55', 'sub-eng': '64', 'sub-math': '71', 'sub-sci': '72' } },
+    { id: 'row-4', studentName: '', rollNumber: '104', marks: { 'sub-hindi': '74', 'sub-eng': '76', 'sub-math': '78', 'sub-sci': '77' } },
+    { id: 'row-5', studentName: '', rollNumber: '105', marks: { 'sub-hindi': '68', 'sub-eng': '71', 'sub-math': '70', 'sub-sci': '73' } },
+    { id: 'row-6', studentName: '', rollNumber: '106', marks: { 'sub-hindi': '52', 'sub-eng': '58', 'sub-math': '49', 'sub-sci': '62' } },
+    { id: 'row-7', studentName: '', rollNumber: '107', marks: { 'sub-hindi': '64', 'sub-eng': '69', 'sub-math': '72', 'sub-sci': '66' } },
+    { id: 'row-8', studentName: '', rollNumber: '108', marks: { 'sub-hindi': '28', 'sub-eng': '35', 'sub-math': '26', 'sub-sci': '31' } },
+    { id: 'row-9', studentName: '', rollNumber: '109', marks: { 'sub-hindi': '48', 'sub-eng': '52', 'sub-math': '44', 'sub-sci': '50' } },
+    { id: 'row-10', studentName: '', rollNumber: '110', marks: { 'sub-hindi': '62', 'sub-eng': '66', 'sub-math': '68', 'sub-sci': '70' } },
+    { id: 'row-11', studentName: '', rollNumber: '111', marks: { 'sub-hindi': '59', 'sub-eng': 'A', 'sub-math': '63', 'sub-sci': '65' } },
+    { id: 'row-12', studentName: '', rollNumber: '112', marks: { 'sub-hindi': '38', 'sub-eng': '44', 'sub-math': '36', 'sub-sci': '41' } },
+    { id: 'row-13', studentName: '', rollNumber: '113', marks: { 'sub-hindi': '78', 'sub-eng': '76', 'sub-math': '79', 'sub-sci': '78' } },
+    { id: 'row-14', studentName: '', rollNumber: '114', marks: { 'sub-hindi': '50', 'sub-eng': '54', 'sub-math': '56', 'sub-sci': '52' } },
+    { id: 'row-15', studentName: '', rollNumber: '115', marks: { 'sub-hindi': '66', 'sub-eng': '68', 'sub-math': '70', 'sub-sci': '67' } },
   ];
 
   return {
@@ -350,6 +312,9 @@ export const StorageService = {
 
   saveSchoolSettings(settings: SchoolSettings): void {
     localStorage.setItem(STORAGE_KEYS.SCHOOL_SETTINGS, JSON.stringify(settings));
+    setDoc(doc(db, 'schoolSettings', 'main'), settings).catch((err) => {
+      console.warn('Firestore saveSchoolSettings skipped:', err);
+    });
   },
 
   getTeachers(): Teacher[] {
@@ -363,12 +328,87 @@ export const StorageService = {
 
   saveTeachers(teachers: Teacher[]): void {
     localStorage.setItem(STORAGE_KEYS.TEACHERS, JSON.stringify(teachers));
+    // Persist full roster and individual documents to Firestore
+    setDoc(doc(db, 'teachers', 'all_roster'), { list: teachers }).catch(() => {});
+    teachers.forEach((t) => {
+      if (t.teacherId) {
+        setDoc(doc(db, 'teachers', t.teacherId), t).catch(() => {});
+      }
+    });
   },
 
   addTeacher(teacher: Teacher): void {
     const teachers = this.getTeachers();
-    teachers.unshift(teacher);
+    const existingIdx = teachers.findIndex(
+      (t) => t.teacherId.toLowerCase() === teacher.teacherId.toLowerCase() || t.email.toLowerCase() === teacher.email.toLowerCase()
+    );
+    if (existingIdx >= 0) {
+      teachers[existingIdx] = { ...teachers[existingIdx], ...teacher };
+    } else {
+      teachers.unshift(teacher);
+    }
     this.saveTeachers(teachers);
+  },
+
+  async syncFromFirestore(): Promise<void> {
+    try {
+      // 1. School settings
+      const schoolSnap = await getDoc(doc(db, 'schoolSettings', 'main')).catch(() => null);
+      if (schoolSnap && schoolSnap.exists()) {
+        localStorage.setItem(STORAGE_KEYS.SCHOOL_SETTINGS, JSON.stringify(schoolSnap.data()));
+      }
+
+      // 2. Class configs
+      const classSnap = await getDoc(doc(db, 'classConfigs', 'current')).catch(() => null);
+      if (classSnap && classSnap.exists() && classSnap.data().list) {
+        localStorage.setItem(STORAGE_KEYS.CLASS_CONFIGS, JSON.stringify(classSnap.data().list));
+      }
+
+      // 3. Teachers roster
+      const teachersSnap = await getDoc(doc(db, 'teachers', 'all_roster')).catch(() => null);
+      if (teachersSnap && teachersSnap.exists() && teachersSnap.data().list) {
+        const cloudTeachers: Teacher[] = teachersSnap.data().list;
+        const localTeachers = this.getTeachers();
+        const merged = [...localTeachers];
+        cloudTeachers.forEach((ct) => {
+          const idx = merged.findIndex(
+            (m) => m.teacherId.toLowerCase() === ct.teacherId.toLowerCase() || m.email.toLowerCase() === ct.email.toLowerCase()
+          );
+          if (idx >= 0) {
+            merged[idx] = { ...merged[idx], ...ct };
+          } else {
+            merged.push(ct);
+          }
+        });
+        localStorage.setItem(STORAGE_KEYS.TEACHERS, JSON.stringify(merged));
+      }
+
+      // 4. Exams
+      const examsSnap = await getDoc(doc(db, 'exams', 'all_exams')).catch(() => null);
+      if (examsSnap && examsSnap.exists() && examsSnap.data().list) {
+        localStorage.setItem(STORAGE_KEYS.EXAMS, JSON.stringify(examsSnap.data().list));
+      }
+
+      // 5. Students
+      const studentsSnap = await getDoc(doc(db, 'students', 'all_students')).catch(() => null);
+      if (studentsSnap && studentsSnap.exists() && studentsSnap.data().list) {
+        localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(studentsSnap.data().list));
+      }
+
+      // 6. Marks
+      const marksSnap = await getDoc(doc(db, 'marks', 'all_marks')).catch(() => null);
+      if (marksSnap && marksSnap.exists() && marksSnap.data().list) {
+        localStorage.setItem(STORAGE_KEYS.MARKS, JSON.stringify(marksSnap.data().list));
+      }
+
+      // 7. Graph Projects
+      const projectsSnap = await getDoc(doc(db, 'graphProjects', 'all_projects')).catch(() => null);
+      if (projectsSnap && projectsSnap.exists() && projectsSnap.data().list) {
+        localStorage.setItem(STORAGE_KEYS.GRAPH_PROJECTS, JSON.stringify(projectsSnap.data().list));
+      }
+    } catch (err) {
+      console.warn('syncFromFirestore failed or offline:', err);
+    }
   },
 
   updateTeacherProfile(teacherIdOrId: string, updates: Partial<Teacher>): Teacher | null {
@@ -417,6 +457,7 @@ export const StorageService = {
 
   saveStudents(students: StudentRecord[]): void {
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students));
+    setDoc(doc(db, 'students', 'all_students'), { list: students }).catch(() => {});
   },
 
   getExams(): Examination[] {
@@ -430,6 +471,7 @@ export const StorageService = {
 
   saveExams(exams: Examination[]): void {
     localStorage.setItem(STORAGE_KEYS.EXAMS, JSON.stringify(exams));
+    setDoc(doc(db, 'exams', 'all_exams'), { list: exams }).catch(() => {});
   },
 
   getMarks(): StudentMarksRecord[] {
@@ -445,6 +487,7 @@ export const StorageService = {
 
   saveMarks(marks: StudentMarksRecord[]): void {
     localStorage.setItem(STORAGE_KEYS.MARKS, JSON.stringify(marks));
+    setDoc(doc(db, 'marks', 'all_marks'), { list: marks }).catch(() => {});
   },
 
   getLogs(): AuditLog[] {
@@ -466,6 +509,7 @@ export const StorageService = {
     logs.unshift(newLog);
     if (logs.length > 200) logs.pop();
     localStorage.setItem(STORAGE_KEYS.LOGS, JSON.stringify(logs));
+    setDoc(doc(db, 'auditLogs', newLog.id), newLog).catch(() => {});
   },
 
   // Graph Projects History
@@ -481,6 +525,7 @@ export const StorageService = {
 
   saveGraphProjects(projects: GraphGenerationRecord[]): void {
     localStorage.setItem(STORAGE_KEYS.GRAPH_PROJECTS, JSON.stringify(projects));
+    setDoc(doc(db, 'graphProjects', 'all_projects'), { list: projects }).catch(() => {});
   },
 
   getGraphProjectById(id: string): GraphGenerationRecord | null {
@@ -525,6 +570,7 @@ export const StorageService = {
 
   saveClassConfigs(configs: ClassConfig[]): void {
     localStorage.setItem(STORAGE_KEYS.CLASS_CONFIGS, JSON.stringify(configs));
+    setDoc(doc(db, 'classConfigs', 'current'), { list: configs }).catch(() => {});
   },
 
   getClassConfig(className: string): ClassConfig | undefined {

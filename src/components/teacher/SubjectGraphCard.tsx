@@ -6,7 +6,8 @@ import {
 } from '../../types';
 import { PERFORMANCE_COLORS } from '../../utils/constants';
 import { ExportService } from '../../utils/exportUtils';
-import { Download, Maximize2, X, BarChart2, ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { Download, Maximize2, X, BarChart2, ChevronLeft, ChevronRight, Users, Share2 } from 'lucide-react';
+import { ShareReportModal } from '../common/ShareReportModal';
 
 interface SubjectGraphCardProps {
   subject: SpreadsheetSubject;
@@ -28,6 +29,7 @@ export const SubjectGraphCard: React.FC<SubjectGraphCardProps> = ({
   meta,
 }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
 
   const STUDENTS_PER_GRAPH = 10;
@@ -87,6 +89,16 @@ export const SubjectGraphCard: React.FC<SubjectGraphCardProps> = ({
 
             {/* Quick Actions */}
             <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsShareOpen(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors cursor-pointer"
+                title="Share this subject report on WhatsApp, Email, Instagram..."
+              >
+                <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Share</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handleDownloadPDF}
@@ -394,6 +406,21 @@ export const SubjectGraphCard: React.FC<SubjectGraphCardProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {isShareOpen && (
+        <ShareReportModal
+          isOpen={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+          reportTitle={`Surevin_${subject.name.replace(/\s+/g, '_')}_Graph.pdf`}
+          className={`Class ${meta.className} – ${meta.sectionName}`}
+          examName={meta.examinationName}
+          teacherName={meta.teacherName}
+          onDownloadPdf={() => {
+            setIsShareOpen(false);
+            handleDownloadPDF();
+          }}
+        />
       )}
     </>
   );

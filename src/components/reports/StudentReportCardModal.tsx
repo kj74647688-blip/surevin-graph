@@ -11,7 +11,8 @@ import {
 } from '../../utils/constants';
 import { ExportService } from '../../utils/exportUtils';
 import { StudentSubjectGraph } from '../graphs/StudentSubjectGraph';
-import { X, Download, Image as ImageIcon, Printer, Award, CheckCircle2 } from 'lucide-react';
+import { ShareReportModal } from '../common/ShareReportModal';
+import { X, Download, Image as ImageIcon, Printer, Award, CheckCircle2, Share2 } from 'lucide-react';
 
 interface StudentReportCardModalProps {
   isOpen: boolean;
@@ -28,6 +29,8 @@ export const StudentReportCardModal: React.FC<StudentReportCardModalProps> = ({
   exam,
   marksRecord,
 }) => {
+  const [isShareOpen, setIsShareOpen] = React.useState(false);
+
   if (!isOpen) return null;
 
   const performances = exam.subjects.map((sub) => {
@@ -70,6 +73,14 @@ export const StudentReportCardModal: React.FC<StudentReportCardModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsShareOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition-colors cursor-pointer"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Share Report</span>
+            </button>
             <button
               type="button"
               onClick={handleDownloadPDF}
@@ -203,6 +214,21 @@ export const StudentReportCardModal: React.FC<StudentReportCardModalProps> = ({
           </button>
         </div>
       </div>
+
+      {isShareOpen && (
+        <ShareReportModal
+          isOpen={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+          reportTitle={`Surevin_${student.name.replace(/\s+/g, '_')}_Report.pdf`}
+          className={`Class ${student.class} – ${student.section}`}
+          examName={exam.name}
+          teacherName={student.assignedTeacherName}
+          onDownloadPdf={() => {
+            setIsShareOpen(false);
+            handleDownloadPDF();
+          }}
+        />
+      )}
     </div>
   );
 };

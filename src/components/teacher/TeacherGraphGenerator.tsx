@@ -19,6 +19,7 @@ import { SpreadsheetImportModal } from './SpreadsheetImportModal';
 import { TeacherProfileModal } from './TeacherProfileModal';
 import { TeacherGraphHistory } from './TeacherGraphHistory';
 import { PdfHeadingModal } from './PdfHeadingModal';
+import { ShareReportModal } from '../common/ShareReportModal';
 import {
   BarChart3,
   Download,
@@ -32,7 +33,8 @@ import {
   Building2,
   Calendar,
   Sparkles,
-  Printer
+  Printer,
+  Share2
 } from 'lucide-react';
 
 interface TeacherGraphGeneratorProps {
@@ -108,9 +110,11 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
 
   // UI state
   const [graphsGenerated, setGraphsGenerated] = useState(true);
+  const [savedGraphProject, setSavedGraphProject] = useState<GraphGenerationRecord | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
@@ -201,12 +205,21 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
     };
   }, [rows, subjects]);
 
+  // Active Subjects & Rows for Graph Rendering
+  const activeGraphSubjects = useMemo(() => {
+    return savedGraphProject ? savedGraphProject.subjects : subjects;
+  }, [savedGraphProject, subjects]);
+
+  const activeGraphRows = useMemo(() => {
+    return savedGraphProject ? savedGraphProject.rows : rows;
+  }, [savedGraphProject, rows]);
+
   // Subject-wise graph items calculation sorted in strictly DECREASING percentage order
   const subjectGraphDataMap = useMemo<Record<string, SubjectGraphItem[]>>(() => {
     const map: Record<string, SubjectGraphItem[]> = {};
 
-    subjects.forEach((sub) => {
-      const items: SubjectGraphItem[] = rows
+    activeGraphSubjects.forEach((sub) => {
+      const items: SubjectGraphItem[] = activeGraphRows
         .filter((r) => r.studentName.trim())
         .map((r) => {
           const val = r.marks[sub.id] || '';
@@ -240,14 +253,12 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
           };
         })
         .sort((a, b) => {
-          // Sort strictly increasing: Lowest percentage on left, highest on right, missing/absent at end
           if (a.percentage !== null && b.percentage !== null) {
             if (a.percentage !== b.percentage) {
               return a.percentage - b.percentage;
             }
             return (a.studentName || '').localeCompare(b.studentName || '');
           }
-          // Students with valid percentages appear first (left), missing/absent appear at the end (right)
           if (a.percentage !== null) return -1;
           if (b.percentage !== null) return 1;
           return (a.studentName || '').localeCompare(b.studentName || '');
@@ -257,10 +268,16 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
     });
 
     return map;
-  }, [rows, subjects]);
+  }, [activeGraphRows, activeGraphSubjects]);
 
   // Handle Save Marks & Generate Graphs Action
   const handleSaveAndGenerate = () => {
+    const filledRows = rows.filter((r) => r.studentName.trim());
+    if (filledRows.length === 0) {
+      alert('Please enter student names and subject marks before generating graphs.');
+      return;
+    }
+
     if (validationSummary.invalidEntries > 0) {
       if (!confirm(`Warning: ${validationSummary.invalidEntries} invalid marks detected. Do you want to proceed and generate graphs anyway?`)) {
         return;
@@ -281,16 +298,17 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: publishStatus,
-      studentCount: rows.filter((r) => r.studentName.trim()).length,
+      studentCount: filledRows.length,
       subjectCount: subjects.length,
       subjects,
-      rows,
+      rows: filledRows,
     };
 
+    // 1. Save to Database
     StorageService.saveGraphProject(newProject);
-    setActiveProjectId(projectId);
+    setSavedGraphProject(newProject);
 
-    // Audit Log
+    // 2. Audit Log
     StorageService.addLog({
       performedBy: {
         role: 'TEACHER',
@@ -302,13 +320,24 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
       metadata: { projectId, studentCount: newProject.studentCount, status: publishStatus },
     });
 
+    // 3. Show Graphs
     setGraphsGenerated(true);
     setSaveSuccessMsg(true);
-    setTimeout(() => setSaveSuccessMsg(false), 3000);
 
-    // Scroll to section 3
-    const section3 = document.getElementById('section-3-graphs');
-    section3?.scrollIntoView({ behavior: 'smooth' });
+    // 4. Automatically Clear Temporary Entry Table
+    const freshRows: SpreadsheetRow[] = [
+      { id: `row-1-${Date.now()}`, studentName: '', marks: {} },
+      { id: `row-2-${Date.now()}`, studentName: '', marks: {} },
+      { id: `row-3-${Date.now()}`, studentName: '', marks: {} },
+    ];
+    setRows(freshRows);
+    setActiveProjectId(null);
+
+    // Scroll to Section 3 Graphs
+    setTimeout(() => {
+      const section3 = document.getElementById('section-3-graphs');
+      section3?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   // Open an existing project from History
@@ -549,6 +578,23 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
         }}
       />
 
+      {/* Success Notification Banner */}
+      {saveSuccessMsg && (
+        <div className="p-4 bg-emerald-950/80 border border-emerald-500/50 rounded-2xl text-emerald-200 text-xs font-semibold flex items-center justify-between shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span>Marks saved successfully! Your graphs have been generated. The entry table is ready for new data.</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSaveSuccessMsg(false)}
+            className="text-emerald-400 hover:text-white text-xs font-bold px-2 py-1 rounded-lg hover:bg-emerald-800/50"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* 6. SAVE MARKS AND GENERATE GRAPHS (PROMINENT ACTION BUTTON) */}
       <div className="bg-slate-900 rounded-2xl p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg border border-slate-800">
         <div>
@@ -610,6 +656,16 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
               >
                 <Printer className="w-4 h-4" />
                 <span>PRINT / SAVE ALL GRAPHS AS PDF</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsShareModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer"
+                title="Share report directly on WhatsApp, Email, Instagram, Telegram, Facebook"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>SHARE REPORT</span>
               </button>
 
               <button
@@ -722,6 +778,21 @@ export const TeacherGraphGenerator: React.FC<TeacherGraphGeneratorProps> = ({
           schoolSettings={schoolSettings}
           teacher={currentTeacher}
           onConfirmDownload={handleDownloadCombinedPDF}
+        />
+      )}
+
+      {isShareModalOpen && (
+        <ShareReportModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          reportTitle={`Surevin_Graphs_Class_${currentTeacher.assignedClass}_${currentTeacher.assignedSection}.pdf`}
+          className={`Class ${currentTeacher.assignedClass} – ${currentTeacher.assignedSection}`}
+          examName={examName}
+          teacherName={currentTeacher.name}
+          onDownloadPdf={() => {
+            setIsShareModalOpen(false);
+            setIsPdfModalOpen(true);
+          }}
         />
       )}
     </div>

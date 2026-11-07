@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { StorageService } from '../../utils/storage';
+import { useAuth } from '../../context/AuthContext';
 import { Teacher } from '../../types';
-import { X, GraduationCap, CheckCircle2, Lock, KeyRound, AlertCircle } from 'lucide-react';
+import { validatePhoneNumber } from '../../utils/phoneValidation';
+import { X, GraduationCap, CheckCircle2, KeyRound, AlertCircle, Loader2, Mail } from 'lucide-react';
 
 interface TeacherSignupModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { registerTeacherWithFirebase } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,93 +25,120 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
   const [selectedClass, setSelectedClass] = useState('VI');
   const [section, setSection] = useState('Gold');
   const [subjectsInput, setSubjectsInput] = useState('English, Hindi, Mathematics, Science');
-  const [adminIdInput, setAdminIdInput] = useState('');
+
+  // Inline Validation States
   const [errorMsg, setErrorMsg] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successTeacher, setSuccessTeacher] = useState<Teacher | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handlePhoneBlur = () => {
+    if (!mobileNumber.trim()) {
+      setPhoneError('');
+      return;
+    }
+    const val = validatePhoneNumber(mobileNumber, 'IN');
+    if (!val.isValid) {
+      setPhoneError(val.error || 'Invalid Indian mobile number.');
+    } else {
+      setPhoneError('');
+    }
+  };
+
+  const handleEmailBlur = () => {
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (cleanEmail && !emailRegex.test(cleanEmail)) {
+      setEmailError('Please enter a valid email address format.');
+    } else {
+      setEmailError('');
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setPhoneError('');
+    setEmailError('');
 
-    if (!fullName.trim() || !email.trim()) {
-      setErrorMsg('Please enter Full Name and Email.');
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = fullName.trim();
+    const cleanPass = password.trim();
+
+    if (!cleanName || !cleanEmail) {
+      setErrorMsg('Please enter your Full Name and Email address.');
       return;
     }
 
-    if (!password.trim()) {
-      setErrorMsg('Please enter a password for your account.');
+    // Email format validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setErrorMsg('Please enter a valid email address (e.g. teacher@surevinschool.com).');
       return;
     }
 
-    if (password.trim() !== confirmPassword.trim()) {
+    // Phone validation
+    const phoneVal = validatePhoneNumber(mobileNumber, 'IN');
+    if (!phoneVal.isValid) {
+      setErrorMsg(phoneVal.error || 'Please enter a valid mobile number (e.g., +91 98765 43210).');
+      setPhoneError(phoneVal.error || 'Invalid number format');
+      return;
+    }
+
+    if (!cleanPass) {
+      setErrorMsg('Please set a password for your account.');
+      return;
+    }
+
+    if (cleanPass.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (cleanPass !== confirmPassword.trim()) {
       setErrorMsg('Passwords do not match. Please re-enter.');
       return;
     }
 
     setIsSubmitting(true);
 
-    const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const teacherId = `SF-TEA-2026-${randomCode}`;
-
     const subList = subjectsInput
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
 
-    const assignedSubjects = subList.map((s, idx) => ({
-      id: `sub-${idx}-${Date.now()}`,
-      name: s,
-      code: `${s.substring(0, 3).toUpperCase()}-0${idx + 1}`,
-      maxMarks: 80,
-      passingMarks: 32,
-    }));
+    try {
+      const res = await registerTeacherWithFirebase({
+        fullName: cleanName,
+        email: cleanEmail,
+        password: cleanPass,
+        phone: phoneVal.e164 || mobileNumber,
+        assignedClass: selectedClass,
+        assignedSection: section,
+        subjects: subList,
+        schoolName,
+      });
 
-    const newTeacher: Teacher = {
-      id: `tea-${Date.now()}`,
-      teacherId,
-      name: fullName,
-      email,
-      password: password.trim(),
-      designation: 'Senior Faculty',
-      assignedClass: selectedClass.replace('Class ', ''),
-      assignedSection: section,
-      academicSession: '2026-2027',
-      assignedSubjects,
-      assignedSubjectIds: assignedSubjects.map((s) => s.id),
-      active: true,
-      permissions: {
-        canEditMarks: true,
-        canExportReports: true,
-        canAddStudents: true,
-      },
-      createdAt: new Date().toISOString(),
-    };
-
-    StorageService.addTeacher(newTeacher);
-
-    StorageService.addLog({
-      performedBy: {
-        role: 'TEACHER',
-        id: teacherId,
-        name: fullName,
-      },
-      action: 'TEACHER_SELF_SIGNUP',
-      details: `Teacher ${fullName} self-registered with Teacher ID ${teacherId} for Class ${selectedClass} - ${section}.`,
-      metadata: { teacherId, email, schoolName, adminId: adminIdInput || 'Independent' },
-    });
-
-    setSuccessTeacher(newTeacher);
-    setIsSubmitting(false);
+      if (res.success && res.teacher) {
+        setSuccessTeacher(res.teacher);
+      } else {
+        setErrorMsg(res.message || 'Registration failed. Please try again.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'An error occurred during account registration.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-150">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-150 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-900 to-indigo-900 px-6 py-5 text-white flex items-center justify-between">
+        <div className="bg-gradient-to-r from-blue-900 to-indigo-900 px-6 py-5 text-white flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-amber-300 font-bold border border-white/20">
               <GraduationCap className="w-5 h-5" />
@@ -131,38 +160,56 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
         {/* Body */}
         <div className="p-6">
           {successTeacher ? (
-            <div className="text-center py-6 space-y-4">
-              <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-500/30">
-                <CheckCircle2 className="w-10 h-10" />
+            <div className="text-center py-5 space-y-4">
+              <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-500/30 shadow-lg">
+                <CheckCircle2 className="w-9 h-9" />
               </div>
-              <h4 className="text-lg font-bold text-white">Registration Successful!</h4>
-              <p className="text-xs text-slate-300 max-w-xs mx-auto">
-                Your Teacher account has been created. You can log in using your Teacher ID or Email with your Password.
+              <h4 className="text-lg font-extrabold text-white">Teacher Account Created Successfully!</h4>
+              <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+                Your institutional account is registered and active. Save your login credentials below:
               </p>
-              <div className="p-4 bg-slate-800 rounded-xl border border-slate-700 text-left space-y-2 font-mono text-xs">
-                <div className="flex justify-between text-slate-300">
+              
+              <div className="p-4 bg-slate-800/90 rounded-2xl border border-slate-700 text-left space-y-2.5 font-mono text-xs shadow-inner">
+                <div className="flex items-center justify-between text-slate-300">
                   <span className="text-slate-400">Teacher ID:</span>
-                  <span className="text-amber-300 font-bold">{successTeacher.teacherId}</span>
+                  <span className="text-amber-300 font-extrabold text-sm tracking-wider">{successTeacher.teacherId}</span>
                 </div>
-                <div className="flex justify-between text-slate-300">
-                  <span className="text-slate-400">Email:</span>
-                  <span className="text-white">{successTeacher.email}</span>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span className="text-slate-400">Registered Email:</span>
+                  <span className="text-white font-medium">{successTeacher.email}</span>
                 </div>
-                <div className="flex justify-between text-slate-300">
-                  <span className="text-slate-400">Password:</span>
-                  <span className="text-emerald-400 font-bold">{successTeacher.password}</span>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span className="text-slate-400">Your Password:</span>
+                  <span className="text-emerald-400 font-bold">{password}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-300 pt-1 border-t border-slate-700/60">
+                  <span className="text-slate-400">Class & Section:</span>
+                  <span className="text-indigo-300 font-bold">Class {successTeacher.assignedClass} – {successTeacher.assignedSection}</span>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  onSuccess(successTeacher);
-                  onClose();
-                }}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all shadow-md cursor-pointer"
-              >
-                Proceed to Dashboard
-              </button>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`Teacher ID: ${successTeacher.teacherId}\nEmail: ${successTeacher.email}\nPassword: ${password}`);
+                    alert(`Copied login details to clipboard:\nTeacher ID: ${successTeacher.teacherId}\nPassword: ${password}`);
+                  }}
+                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs border border-slate-700 transition-all cursor-pointer"
+                >
+                  Copy Credentials
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSuccess(successTeacher);
+                    onClose();
+                  }}
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-all shadow-md cursor-pointer"
+                >
+                  Log In Directly
+                </button>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSignup} className="space-y-4 text-xs">
@@ -187,6 +234,7 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
                     className="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500"
                   />
                 </div>
+
                 <div>
                   <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300 mb-1">
                     Email Address *
@@ -195,10 +243,14 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
                     type="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
+                    onBlur={handleEmailBlur}
                     placeholder="teacher@surevinschool.com"
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500"
+                    className={`w-full px-3 py-2.5 rounded-xl bg-slate-800 border text-white text-xs focus:outline-none ${
+                      emailError ? 'border-rose-500 focus:border-rose-500' : 'border-slate-700 focus:border-blue-500'
+                    }`}
                   />
+                  {emailError && <span className="text-3xs text-rose-400 mt-0.5 block">{emailError}</span>}
                 </div>
               </div>
 
@@ -213,7 +265,7 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
+                    placeholder="At least 6 characters"
                     className="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500 font-mono"
                   />
                 </div>
@@ -245,21 +297,27 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
                     className="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500"
                   />
                 </div>
+
                 <div>
                   <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                    Mobile Number
+                    Mobile Number (+91 Indian Format) *
                   </label>
                   <input
                     type="tel"
+                    required
                     value={mobileNumber}
-                    onChange={(e) => setMobileNumber(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500"
+                    onChange={(e) => { setMobileNumber(e.target.value); setPhoneError(''); }}
+                    onBlur={handlePhoneBlur}
+                    placeholder="+91 98765 43210 or 9876543210"
+                    className={`w-full px-3 py-2.5 rounded-xl bg-slate-800 border text-white text-xs focus:outline-none ${
+                      phoneError ? 'border-rose-500 focus:border-rose-500' : 'border-slate-700 focus:border-blue-500'
+                    }`}
                   />
+                  {phoneError && <span className="text-3xs text-rose-400 mt-0.5 block">{phoneError}</span>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-1">
                   <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300 mb-1">
                     Class *
@@ -289,18 +347,6 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
                     className="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500"
                   />
                 </div>
-                <div className="col-span-1">
-                  <label className="block text-2xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                    Optional Admin ID
-                  </label>
-                  <input
-                    type="text"
-                    value={adminIdInput}
-                    onChange={(e) => setAdminIdInput(e.target.value)}
-                    placeholder="admin"
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500 font-mono"
-                  />
-                </div>
               </div>
 
               <div>
@@ -319,7 +365,7 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
 
               <div className="p-3 bg-blue-950/40 rounded-xl border border-blue-800/60 text-blue-200 text-3xs flex items-center gap-2">
                 <KeyRound className="w-4 h-4 text-amber-300 shrink-0" />
-                <span>Your custom password will be saved securely for login along with your generated Teacher ID.</span>
+                <span>Verification email will be sent automatically to your address upon submission.</span>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
@@ -333,9 +379,10 @@ export const TeacherSignupModal: React.FC<TeacherSignupModalProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  {isSubmitting ? 'Creating Account...' : 'Create Teacher Account'}
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  <span>{isSubmitting ? 'Registering Account...' : 'Register Teacher Account'}</span>
                 </button>
               </div>
             </form>

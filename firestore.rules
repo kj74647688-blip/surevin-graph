@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'admin@surevin.edu' ||
+        request.auth.token.email == 'kj74647688@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')
+      );
+    }
+
+    // User profiles & credentials
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // Teachers directory
+    match /teachers/{teacherId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Class configurations & subjects
+    match /classConfigs/{configId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Student records
+    match /students/{studentId} {
+      allow read: if true;
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // Exams
+    match /exams/{examId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Marks
+    match /marks/{markId} {
+      allow read: if true;
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // Graph Projects
+    match /graphProjects/{projectId} {
+      allow read: if true;
+      allow create, update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    // School Settings
+    match /schoolSettings/{settingId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Audit logs
+    match /auditLogs/{logId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+    }
+  }
+}
